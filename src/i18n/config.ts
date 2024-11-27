@@ -64,6 +64,7 @@ const resources = {
       'pricing.breakdown.basePrice': 'Base Price',
       'pricing.otherCharges.save': 'Save',
       'pricing.otherCharges.edit': 'Edit',
+      'pricing.reset': 'Reset Calculator'
     }
   },
   zh: {
@@ -128,6 +129,7 @@ const resources = {
       'pricing.breakdown.basePrice': '基础价格',
       'pricing.otherCharges.save': '保存',
       'pricing.otherCharges.edit': '编辑',
+      'pricing.reset': '重新计算'
     }
   },
   ja: {
@@ -192,6 +194,7 @@ const resources = {
       'pricing.breakdown.basePrice': '基本料金',
       'pricing.otherCharges.save': '保存',
       'pricing.otherCharges.edit': '編集',
+      'pricing.reset': '計算をリセット'
     }
   }
 };

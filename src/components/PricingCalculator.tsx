@@ -45,7 +45,7 @@ interface ChargeItemState {
 const PricingCalculator: React.FC = () => {
   const { t, i18n } = useTranslation();
   
-  // 修改初始货币设置
+  // 改初始货币设置
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>(() => {
     const currencyCode = LANGUAGE_CURRENCY_MAP[i18n.language as LanguageCode] || 'USD';
     return {
@@ -514,8 +514,9 @@ const PricingCalculator: React.FC = () => {
   const renderPriceBreakdown = () => {
     if (!priceBreakdown || !showPriceBreakdown) return null;
 
-    // 获取自定义收费项
+    const hasAdditionalFeatures = Object.keys(priceBreakdown.additionalFeaturesCost).length > 0;
     const customFeatures = features.filter(f => f.isCustom);
+    const hasCustomFeatures = customFeatures.length > 0;
     
     return (
       <div className="price-breakdown">
@@ -631,24 +632,36 @@ const PricingCalculator: React.FC = () => {
           )}
         </div>
 
-        {/* 附加功能 */}
-        {Object.keys(priceBreakdown.additionalFeaturesCost).length > 0 && (
+        {/* 附加功能 - 只在有选择时显示 */}
+        {hasAdditionalFeatures && (
           <div className="breakdown-section">
             <h4>{t('pricing.breakdown.additionalFeatures')}</h4>
             {Object.entries(priceBreakdown.additionalFeaturesCost).map(([name, cost]) => (
               <div key={name} className="breakdown-item">
                 <span>{name}</span>
-                <span>{selectedCurrency.symbol}{(cost * selectedCurrency.rate).toFixed(2)}</span>
+                <span>{`${selectedCurrency.symbol}${(cost * selectedCurrency.rate).toFixed(2)}`}</span>
               </div>
             ))}
           </div>
         )}
 
-        {/* 其他收费项 */}
-        {customFeatures.length > 0 && (
+        {/* 其他收费项 - 只在有内容时显示 */}
+        {hasCustomFeatures && (
           <div className="breakdown-section">
             <h4>{t('pricing.breakdown.otherCharges')}</h4>
-            {customFeatures.map(renderChargeItem)}
+            {customFeatures.map(feature => (
+              <div key={feature.id} className="breakdown-item">
+                <div className="charge-details">
+                  <span className="charge-name">{feature.name}</span>
+                  {feature.description && (
+                    <span className="charge-note">{feature.description}</span>
+                  )}
+                </div>
+                <span className="charge-amount">
+                  {selectedCurrency.symbol}{(feature.priceIncrement * selectedCurrency.rate).toFixed(2)}
+                </span>
+              </div>
+            ))}
           </div>
         )}
 
@@ -811,6 +824,21 @@ const PricingCalculator: React.FC = () => {
     }
   }, [i18n.language]);
 
+  // 添加重新计算函数
+  const handleReset = () => {
+    setUserCount(BASE_TIER.teamMembers);
+    setMessageCredits(BASE_TIER.messageCredits);
+    setVectorStorage(BASE_TIER.vectorStorage);
+    setVectorStorageInput(BASE_TIER.vectorStorage.toString());
+    setStorageUnit('MB');
+    setSelectedFeatures([]);
+    setFeatures([]);
+    setGlobalDiscount(0);
+    setDiscountInputValue('0');
+    setShowPriceBreakdown(false);
+    setPriceBreakdown(null);
+  };
+
   return (
     <div className="pricing-calculator" lang={i18n.language}>
       <div className="calculator-header">
@@ -929,9 +957,14 @@ const PricingCalculator: React.FC = () => {
 
       {renderOtherCharges()}
 
-      <button className="update-quote" onClick={handleUpdateQuote}>
-        {t('pricing.updateQuote')}
-      </button>
+      <div className="calculator-actions">
+        <button className="reset-button" onClick={handleReset}>
+          {t('pricing.reset')}
+        </button>
+        <button className="update-quote" onClick={handleUpdateQuote}>
+          {t('pricing.updateQuote')}
+        </button>
+      </div>
 
       {renderPriceBreakdown()}
     </div>
