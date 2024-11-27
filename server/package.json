@@ -1,0 +1,32 @@
+{
+  "name": "llm-price-tracker-server",
+  "version": "1.0.0",
+  "description": "LLM Price Tracking Server",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "clean": "del-cli dist"
+  },
+  "dependencies": {
+    "@mui/icons-material": "^6.1.8",
+    "cheerio": "*",
+    "cors": "*",
+    "dotenv": "*",
+    "express": "*",
+    "puppeteer": "*"
+  },
+  "devDependencies": {
+    "@types/cors": "*",
+    "@types/express": "*",
+    "@types/node": "*",
+    "del-cli": "*",
+    "tsx": "*",
+    "typescript": "*"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

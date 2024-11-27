@@ -1,20 +1,17 @@
 import React from 'react';
 import PricingCalculator from './components/PricingCalculator';
+import { LLMPricing } from './components/LLMPricing';
 import './App.css';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>Enterprise RAG Knowledge Base</h1>
-      </header>
-      <main className="App-main">
-        <PricingCalculator />
-      </main>
-      <footer className="App-footer">
-        <p>© 2024 Enterprise RAG. All rights reserved.</p>
-      </footer>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<PricingCalculator />} />
+        <Route path="/llm-pricing" element={<LLMPricing />} />
+      </Routes>
+    </Router>
   );
 }
 
