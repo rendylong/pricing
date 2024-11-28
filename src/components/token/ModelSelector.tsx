@@ -1,4 +1,5 @@
-import { useTranslation } from 'react-i18next'
+'use client'
+
 import { Select } from '@/components/ui/Select'
 
 interface ModelSelectorProps {
@@ -8,52 +9,42 @@ interface ModelSelectorProps {
   onEmbeddingModelChange: (model: string) => void
 }
 
-const chatModels = [
-  { id: 'gpt-4-turbo', name: 'GPT-4 Turbo' },
-  { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo' }
-]
-
-const embeddingModels = [
-  { id: 'text-embedding-3-large', name: 'text-embedding-3-large' },
-  { id: 'text-embedding-3-small', name: 'text-embedding-3-small' }
-]
-
 export function ModelSelector({
   chatModel,
   embeddingModel,
   onChatModelChange,
   onEmbeddingModelChange
 }: ModelSelectorProps) {
-  const { t } = useTranslation()
+  const { t } = useTranslation('common')
 
   return (
-    <>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          {t('token.models.chat')}
+        </label>
         <Select
-          label={t('pricing.tokenEstimator.chatModel')}
           value={chatModel}
           onChange={(e) => onChatModelChange(e.target.value)}
+          className="w-full"
         >
-          {chatModels.map(model => (
-            <option key={model.id} value={model.id}>
-              {model.name}
-            </option>
-          ))}
+          <option value="gpt-4">GPT-4</option>
+          <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
         </Select>
       </div>
       <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          {t('token.models.embedding')}
+        </label>
         <Select
-          label={t('pricing.tokenEstimator.embeddingModel')}
           value={embeddingModel}
           onChange={(e) => onEmbeddingModelChange(e.target.value)}
+          className="w-full"
         >
-          {embeddingModels.map(model => (
-            <option key={model.id} value={model.id}>
-              {model.name}
-            </option>
-          ))}
+          <option value="text-embedding-3-large">text-embedding-3-large</option>
+          <option value="text-embedding-3-small">text-embedding-3-small</option>
         </Select>
       </div>
-    </>
+    </div>
   )
 } 

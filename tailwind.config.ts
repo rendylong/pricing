@@ -10,17 +10,20 @@ const config: Config = {
     extend: {
       colors: {
         primary: {
-          50: '#f0f9ff',
-          100: '#e0f2fe',
-          200: '#bae6fd',
-          300: '#7dd3fc',
-          400: '#38bdf8',
-          500: '#0ea5e9',
-          600: '#0284c7',
-          700: '#0369a1',
-          800: '#075985',
-          900: '#0c4a6e',
+          50: 'rgb(var(--primary-50))',
+          100: 'rgb(var(--primary-100))',
+          200: 'rgb(var(--primary-200))',
+          300: 'rgb(var(--primary-300))',
+          400: 'rgb(var(--primary-400))',
+          500: 'rgb(var(--primary-500))',
+          600: 'rgb(var(--primary-600))',
+          700: 'rgb(var(--primary-700))',
+          800: 'rgb(var(--primary-800))',
+          900: 'rgb(var(--primary-900))',
         },
+      },
+      maxWidth: {
+        '8xl': '88rem',
       },
       spacing: {
         '18': '4.5rem',

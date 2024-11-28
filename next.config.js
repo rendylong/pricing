@@ -1,13 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  i18n: {
-    locales: ['en', 'zh', 'ja'],
-    defaultLocale: 'en',
-    localeDetection: true,
-  },
-  experimental: {
-    appDir: true,
-  },
+  // 移除 experimental.appDir，因为它现在是默认的
 }
 
 module.exports = nextConfig 

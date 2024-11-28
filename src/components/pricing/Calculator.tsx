@@ -1,12 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import { Select } from '@/components/ui/Select'
-import { Button } from '@/components/ui/Button'
 import { FeatureList } from './FeatureList'
 import { PriceBreakdown } from './PriceBreakdown'
-import Link from 'next/link'
+import { NumberInput } from '@/components/ui/NumberInput'
 
 interface PricingState {
   users: number
@@ -18,8 +16,7 @@ interface PricingState {
   currency: string
 }
 
-export function PricingCalculator() {
-  const { t } = useTranslation()
+export function PricingCalculator({ lang }: { lang: string }) {
   const [state, setState] = useState<PricingState>({
     users: 3,
     messageCredits: 5000,
@@ -32,60 +29,44 @@ export function PricingCalculator() {
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">
-          GBase Enterprise {t('pricing.calculator.title')}
-        </h1>
-        <Link 
-          href="/token"
-          className="text-primary-600 hover:text-primary-700"
-        >
-          {t('pricing.tokenEstimator.title')}
-        </Link>
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-6">
           {/* 用户数量 */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              {t('pricing.calculator.users')}
+              团队成员
             </label>
-            <input
-              type="number"
-              min="3"
+            <NumberInput
+              min={3}
               value={state.users}
-              onChange={(e) => setState({ ...state, users: Number(e.target.value) })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+              onChange={(value) => setState({ ...state, users: value })}
             />
+            <p className="mt-1 text-sm text-gray-500">最少3个用户</p>
           </div>
 
           {/* 消息额度 */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              {t('pricing.calculator.messageCredits')}
+              消息额度
             </label>
-            <input
-              type="number"
-              min="5000"
-              step="1000"
+            <NumberInput
+              min={5000}
+              step={1000}
               value={state.messageCredits}
-              onChange={(e) => setState({ ...state, messageCredits: Number(e.target.value) })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+              onChange={(value) => setState({ ...state, messageCredits: value })}
             />
+            <p className="mt-1 text-sm text-gray-500">最少5,000条消息</p>
           </div>
 
           {/* 向量存储 */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              {t('pricing.calculator.vectorStorage')}
+              向量存储
             </label>
             <div className="mt-1 flex rounded-md shadow-sm">
-              <input
-                type="number"
+              <NumberInput
                 value={state.vectorStorage}
-                onChange={(e) => setState({ ...state, vectorStorage: Number(e.target.value) })}
-                className="flex-1 rounded-none rounded-l-md border-gray-300 focus:border-primary-500 focus:ring-primary-500"
+                onChange={(value) => setState({ ...state, vectorStorage: value })}
               />
               <Select
                 value={state.storageUnit}
@@ -96,12 +77,13 @@ export function PricingCalculator() {
                 <option value="GB">GB</option>
               </Select>
             </div>
+            <p className="mt-1 text-sm text-gray-500">最少200MB存储空间</p>
           </div>
 
           {/* 付费周期 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t('pricing.calculator.billingCycle')}
+              付费周期
             </label>
             <div className="flex space-x-4">
               <label className="inline-flex items-center">
@@ -112,7 +94,7 @@ export function PricingCalculator() {
                   onChange={(e) => setState({ ...state, billingCycle: e.target.value as 'monthly' | 'yearly' })}
                   className="form-radio text-primary-600"
                 />
-                <span className="ml-2">{t('pricing.calculator.monthly')}</span>
+                <span className="ml-2">月付</span>
               </label>
               <label className="inline-flex items-center">
                 <input
@@ -122,13 +104,21 @@ export function PricingCalculator() {
                   onChange={(e) => setState({ ...state, billingCycle: e.target.value as 'monthly' | 'yearly' })}
                   className="form-radio text-primary-600"
                 />
-                <span className="ml-2">{t('pricing.calculator.yearly')}</span>
+                <span className="ml-2">年付</span>
               </label>
+              {state.billingCycle === 'yearly' && (
+                <span className="text-sm text-green-600">
+                  年付可节省20%
+                </span>
+              )}
             </div>
           </div>
         </div>
 
         <div>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">
+            附加功能
+          </h3>
           <FeatureList
             selectedFeatures={state.selectedFeatures}
             onFeatureChange={(features) => setState({ ...state, selectedFeatures: features })}
