@@ -1,0 +1,12 @@
+{
+  "pricing": {
+    "calculator": {
+      "title": "Pricing Calculator",
+      "description": "Calculate your GBase Enterprise pricing"
+    },
+    "tokenEstimator": {
+      "title": "Token Usage Estimator",
+      "description": "Estimate your token usage"
+    }
+  }
+} 
