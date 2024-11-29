@@ -1,5 +1,7 @@
 'use client'
 
+import { NumericInput } from '@/components/ui/NumericInput'
+
 interface EstimationResultsProps {
   initialUsage: {
     embedding: number
@@ -9,7 +11,6 @@ interface EstimationResultsProps {
       total: number
       activeUsers: number
     }
-    industry?: string
   }
   monthlyUsage: {
     embedding: number
@@ -17,6 +18,20 @@ interface EstimationResultsProps {
     chatOutput: number
     documents: Record<string, number | ''>
     avgDocumentLength: Record<string, number | ''>
+    pattern: {
+      monthlyGrowthRate: number
+      queriesPerActiveUser: number
+      turnsPerQuery: number
+      description: string
+      embeddingMultiplier: number
+      outputMultiplier: number
+    }
+    tokensPerQuery: {
+      input: number
+      context: number
+      systemPrompt: number
+      outputMultiplier: number
+    }
   }
   costs: {
     initial: {
@@ -34,7 +49,6 @@ interface EstimationResultsProps {
     total: number
     activeUsers: number
   }
-  industry?: string
 }
 
 const DOC_TYPE_NAMES = {
@@ -49,88 +63,12 @@ const DOC_TYPE_NAMES = {
   video: '视频文件'
 }
 
-const INDUSTRY_NAMES = {
-  education: '教育行业',
-  finance: '金融行业',
-  healthcare: '医疗行业',
-  manufacturing: '制造业',
-  retail: '零售业',
-  default: '通用行业'
-}
-
 export function EstimationResults({ 
   initialUsage, 
   monthlyUsage, 
   costs,
-  teamSize,
-  industry 
+  teamSize
 }: EstimationResultsProps) {
-  // 渲染 Token 使用量明细
-  const renderTokenBreakdown = (usage: any) => {
-    const docTypes = Object.keys(usage.documents || {})
-    return (
-      <div className="space-y-3">
-        {docTypes.map(type => {
-          if (!usage.documents[type]) return null
-          const count = Number(usage.documents[type]) || 0
-          const length = Number(usage.avgDocumentLength[type]) || 0
-          const tokens = count * length * 1.5
-          
-          if (tokens === 0) return null
-
-          return (
-            <div key={type} className="flex justify-between items-center">
-              <div className="space-y-1">
-                <div className="text-sm text-gray-900">
-                  {DOC_TYPE_NAMES[type]}
-                </div>
-                <div className="text-xs text-gray-500">
-                  {count.toLocaleString()} 份 × {length.toLocaleString()} 字符
-                </div>
-              </div>
-              <div className="text-sm font-medium text-gray-900">
-                {(tokens / 1000000).toFixed(2)}M tokens
-              </div>
-            </div>
-          )
-        })}
-
-        {/* 团队个人文档 */}
-        {teamSize && teamSize.activeUsers > 0 && (
-          <div className="flex justify-between items-center">
-            <div className="space-y-1">
-              <div className="text-sm text-gray-900">
-                团队个人文档
-              </div>
-              <div className="text-xs text-gray-500">
-                {teamSize.activeUsers.toLocaleString()} 人 × 50 份
-              </div>
-            </div>
-            <div className="text-sm font-medium text-gray-900">
-              {((teamSize.activeUsers * 50 * 2000 * 1.5) / 1000000).toFixed(2)}M tokens
-            </div>
-          </div>
-        )}
-
-        {/* 行业复杂度调整 */}
-        {industry && (
-          <div className="flex justify-between items-center text-sm text-gray-500">
-            <span>行业复杂度调整</span>
-            <span>×{
-              {
-                education: '1.2',
-                finance: '1.3',
-                healthcare: '1.4',
-                manufacturing: '1.1',
-                retail: '1.0'
-              }[industry] || '1.0'
-            }</span>
-          </div>
-        )}
-      </div>
-    )
-  }
-
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
       {/* 初始化成本 */}
@@ -140,7 +78,7 @@ export function EstimationResults({
         </h3>
         
         {/* 基本信息 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="p-4 bg-gray-50 rounded-lg">
             <div className="text-sm text-gray-500 mb-1">
               团队规模
@@ -163,28 +101,41 @@ export function EstimationResults({
               人
             </div>
           </div>
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <div className="text-sm text-gray-500 mb-1">
-              所属行业
-            </div>
-            <div className="text-xl font-semibold">
-              {INDUSTRY_NAMES[industry || 'default']}
-            </div>
-          </div>
         </div>
 
-        {/* Token 使用量 */}
-        <div className="space-y-4">
-          {renderTokenBreakdown(initialUsage)}
-          <div className="border-t border-gray-200 pt-4 mt-4">
-            <div className="flex justify-between">
-              <span className="font-medium text-gray-900">
-                初始化总成本
-              </span>
-              <span className="text-xl font-bold text-primary-600">
-                ${(costs.initial.total || 0).toFixed(2)}
-              </span>
-            </div>
+        {/* 初始文档 Token 使用量 */}
+        <div className="space-y-3">
+          {Object.entries(initialUsage.documents).map(([type, count]) => {
+            if (!count) return null
+            const length = Number(initialUsage.avgDocumentLength[type]) || 0
+            const tokens = Number(count) * length * 1.5
+            
+            if (tokens === 0) return null
+
+            return (
+              <div key={type} className="flex justify-between items-center">
+                <div className="space-y-1">
+                  <div className="text-sm text-gray-900">{DOC_TYPE_NAMES[type]}</div>
+                  <div className="text-xs text-gray-500">
+                    {Number(count).toLocaleString()} 份 × {length.toLocaleString()} 字符
+                  </div>
+                </div>
+                <div className="text-sm font-medium text-gray-900">
+                  {(tokens / 1000000).toFixed(2)}M tokens
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        <div className="border-t border-gray-200 pt-4 mt-4">
+          <div className="flex justify-between">
+            <span className="font-medium text-gray-900">
+              初始化总成本
+            </span>
+            <span className="text-xl font-bold text-primary-600">
+              ${(costs.initial.total || 0).toFixed(2)}
+            </span>
           </div>
         </div>
       </div>
@@ -194,43 +145,94 @@ export function EstimationResults({
         <h3 className="text-lg font-medium text-gray-900 mb-4">
           月度运营成本
         </h3>
+
+        {/* 基础指标 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="p-4 bg-gray-50 rounded-lg">
-            <div className="text-sm text-gray-500 mb-1">
-              月度向量化 Token
-            </div>
+            <div className="text-sm text-gray-500 mb-1">活跃用户数</div>
             <div className="text-2xl font-semibold">
-              {(monthlyUsage.embedding / 1000000).toFixed(2)}M
+              {teamSize?.activeUsers || 0}
             </div>
-            <div className="text-sm text-gray-500">
-              tokens
-            </div>
+            <div className="text-sm text-gray-500">人</div>
           </div>
           <div className="p-4 bg-gray-50 rounded-lg">
-            <div className="text-sm text-gray-500 mb-1">
-              月度对话输入 Token
-            </div>
+            <div className="text-sm text-gray-500 mb-1">日均查询次数/人</div>
             <div className="text-2xl font-semibold">
-              {(monthlyUsage.chatInput / 1000000).toFixed(2)}M
+              {Math.round((monthlyUsage.chatInput / 30 / (teamSize?.activeUsers || 1)) / 3000)}
             </div>
-            <div className="text-sm text-gray-500">
-              tokens
-            </div>
+            <div className="text-sm text-gray-500">次</div>
           </div>
           <div className="p-4 bg-gray-50 rounded-lg">
-            <div className="text-sm text-gray-500 mb-1">
-              月度对话输出 Token
-            </div>
+            <div className="text-sm text-gray-500 mb-1">月度总查询次数</div>
             <div className="text-2xl font-semibold">
-              {(monthlyUsage.chatOutput / 1000000).toFixed(2)}M
+              {Math.round(monthlyUsage.chatInput / 3000)}
             </div>
-            <div className="text-sm text-gray-500">
-              tokens
+            <div className="text-sm text-gray-500">次</div>
+          </div>
+        </div>
+
+        {/* 文档增长详情 */}
+        <div className="mb-6">
+          <h4 className="text-sm font-medium text-gray-900 mb-3">月度新增文档</h4>
+          <div className="space-y-3">
+            {Object.entries(monthlyUsage.documents).map(([type, count]) => {
+              if (!count) return null
+              return (
+                <div key={type} className="flex justify-between items-center">
+                  <div className="space-y-1">
+                    <div className="text-sm text-gray-900">{DOC_TYPE_NAMES[type]}</div>
+                    <div className="text-xs text-gray-500">
+                      {Number(count).toLocaleString()} 份 × {
+                        Number(monthlyUsage.avgDocumentLength[type]).toLocaleString()
+                      } 字符
+                    </div>
+                  </div>
+                  <div className="text-sm font-medium text-gray-900">
+                    {((Number(count) * Number(monthlyUsage.avgDocumentLength[type]) * 1.5) / 1000000).toFixed(2)}M tokens
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Token 使用量明细 */}
+        <div className="mb-6">
+          <h4 className="text-sm font-medium text-gray-900 mb-3">Token 使用量明细</h4>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <div className="space-y-1">
+                <div className="text-sm text-gray-900">向量化 Token</div>
+                <div className="text-xs text-gray-500">新增文档向量化</div>
+              </div>
+              <div className="text-sm font-medium text-gray-900">
+                {(monthlyUsage.embedding / 1000000).toFixed(2)}M tokens
+              </div>
+            </div>
+            <div className="flex justify-between items-center">
+              <div className="space-y-1">
+                <div className="text-sm text-gray-900">对话输入 Token</div>
+                <div className="text-xs text-gray-500">
+                  包含用户输入、上下文和系统提示
+                </div>
+              </div>
+              <div className="text-sm font-medium text-gray-900">
+                {(monthlyUsage.chatInput / 1000000).toFixed(2)}M tokens
+              </div>
+            </div>
+            <div className="flex justify-between items-center">
+              <div className="space-y-1">
+                <div className="text-sm text-gray-900">对话输出 Token</div>
+                <div className="text-xs text-gray-500">AI 回复生成</div>
+              </div>
+              <div className="text-sm font-medium text-gray-900">
+                {(monthlyUsage.chatOutput / 1000000).toFixed(2)}M tokens
+              </div>
             </div>
           </div>
         </div>
 
-        {/* 月度成本明细 */}
+        {/* 成本明细 */}
         <div className="border-t border-gray-200 pt-4">
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
@@ -254,6 +256,35 @@ export function EstimationResults({
               </div>
             </div>
           </div>
+        </div>
+
+        {/* 计算说明 */}
+        <div className="mt-6 text-sm text-gray-500">
+          <h4 className="font-medium mb-2">计算说明：</h4>
+          <ul className="list-disc list-inside space-y-1">
+            <li>每次查询平均消耗：
+              <span className="text-primary-600">
+                {monthlyUsage.tokensPerQuery.input} tokens (用户输入) + 
+                {monthlyUsage.tokensPerQuery.context} tokens (上下文) + 
+                {monthlyUsage.tokensPerQuery.systemPrompt} tokens (系统提示)
+              </span>
+            </li>
+            <li>AI 回复平均消耗：
+              <span className="text-primary-600">
+                输入 tokens 的 {monthlyUsage.pattern.outputMultiplier * 100}%
+              </span>
+            </li>
+            <li>文档向量化：
+              <span className="text-primary-600">
+                每个字符约 {monthlyUsage.pattern.embeddingMultiplier} tokens
+              </span>
+            </li>
+            <li>月度新增文档数：
+              <span className="text-primary-600">
+                基于初始文档量的 {(monthlyUsage.pattern.monthlyGrowthRate * 100).toFixed(0)}% 增长率
+              </span>
+            </li>
+          </ul>
         </div>
       </div>
     </div>

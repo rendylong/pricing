@@ -68,6 +68,28 @@ interface ModelPrice {
   outputPrice?: number | ''
 }
 
+// 添加行业特性配置
+const INDUSTRY_PATTERNS = {
+  university: {
+    monthlyGrowthRate: 0.10,  // 10% 文档月增长率
+    queriesPerActiveUser: 5,   // 每人每天5次查询
+    turnsPerQuery: 5,          // 每次查询5轮对话
+    description: '高校的文档增长较为稳定，教师和学生都有较高的日常使用频率'
+  },
+  k12: {
+    monthlyGrowthRate: 0.05,   // 5% 文档月增长率
+    queriesPerActiveUser: 4,   // 每人每天4次查询
+    turnsPerQuery: 4,          // 每次查询4轮对话
+    description: '中小学的文档增长相对较少，使用频率适中'
+  },
+  bank: {
+    monthlyGrowthRate: 0.15,   // 15% 文档月增长率
+    queriesPerActiveUser: 6,   // 每人每天6次查询
+    turnsPerQuery: 6,          // 每次查询6轮对话
+    description: '金融行业的文档增长快，且有较高的日常使用需求'
+  }
+}
+
 export function TokenEstimator({ lang }: { lang: string }) {
   // 从 localStorage 初始化状态
   const [models, setModels] = useState<ModelPrice[]>(() => {
@@ -190,6 +212,19 @@ export function TokenEstimator({ lang }: { lang: string }) {
     conversationTurns: ''
   })
 
+  const [monthlyPattern, setMonthlyPattern] = useState({
+    monthlyGrowthRate: 0.10,
+    queriesPerActiveUser: 5,
+    turnsPerQuery: 5
+  })
+
+  const handlePatternChange = (updates: Partial<typeof monthlyPattern>) => {
+    setMonthlyPattern(prev => ({
+      ...prev,
+      ...updates
+    }))
+  }
+
   // 将函数移到组件内部
   const handleModelsChange = (newModels: ModelPrice[]) => {
     setModels(newModels)
@@ -247,34 +282,41 @@ export function TokenEstimator({ lang }: { lang: string }) {
   }
 
   const calculateMonthlyUsage = (dims: typeof monthlyDimensions) => {
+    // 获取当前选择的模板
+    const selectedTemplate = dims.selectedTemplate || 'university'
+    const pattern = INDUSTRY_PATTERNS[selectedTemplate]
+
     let monthlyEmbeddingTokens = 0
     let monthlyChatInputTokens = 0
     let monthlyChatOutputTokens = 0
 
     // 计算新增文档的向量化
-    Object.entries(dims.documents).forEach(([docType, count]) => {
+    Object.entries(initialDimensions.documents).forEach(([docType, count]) => {
       if (!count) return
       const numericCount = Number(count)
-      const length = Number(dims.avgDocumentLength[docType]) || 0
-      const tokens = numericCount * length * tokenMultipliers[docType]
+      const length = Number(initialDimensions.avgDocumentLength[docType]) || 0
+      const growthRate = pattern.monthlyGrowthRate
+      const monthlyNewCount = Math.round(numericCount * growthRate)
+      const tokens = monthlyNewCount * length * tokenMultipliers[docType]
       monthlyEmbeddingTokens += tokens
     })
 
     // 计算对话 token
-    const dailyQueries = Number(dims.dailyQueries) || 0
-    const conversationTurns = Number(dims.conversationTurns) || 0
-    const monthlyQueries = dailyQueries * 30
+    const activeUsers = initialDimensions.teamSize?.activeUsers || 0
+    const queriesPerUser = pattern.queriesPerActiveUser
+    const turnsPerQuery = pattern.turnsPerQuery
+    const monthlyQueries = activeUsers * queriesPerUser * 30
 
     const tokensPerQuery = {
-      input: 200,
-      context: 2000,
-      systemPrompt: 300,
-      outputMultiplier: 0.7
+      input: 200,    // 用户输入的平均token数
+      context: 2000, // 上下文的平均token数
+      systemPrompt: 300, // 系统提示的token数
+      outputMultiplier: 0.7 // 输出token与输入token的比例
     }
 
     const tokensPerConversation = 
       (tokensPerQuery.input + tokensPerQuery.context + tokensPerQuery.systemPrompt) * 
-      conversationTurns
+      turnsPerQuery
 
     monthlyChatInputTokens = monthlyQueries * tokensPerConversation
     monthlyChatOutputTokens = monthlyChatInputTokens * tokensPerQuery.outputMultiplier
@@ -284,7 +326,16 @@ export function TokenEstimator({ lang }: { lang: string }) {
       chatInput: monthlyChatInputTokens,
       chatOutput: monthlyChatOutputTokens,
       documents: dims.documents,
-      avgDocumentLength: dims.avgDocumentLength
+      avgDocumentLength: dims.avgDocumentLength,
+      pattern: {
+        monthlyGrowthRate: pattern.monthlyGrowthRate,
+        queriesPerActiveUser: pattern.queriesPerActiveUser,
+        turnsPerQuery: pattern.turnsPerQuery,
+        description: pattern.description,
+        embeddingMultiplier: 1.5,
+        outputMultiplier: tokensPerQuery.outputMultiplier
+      },
+      tokensPerQuery
     }
   }
 
@@ -396,6 +447,39 @@ export function TokenEstimator({ lang }: { lang: string }) {
     </div>
   )
 
+  // 监听模板变化，更新使用模式
+  useEffect(() => {
+    const template = initialDimensions.selectedTemplate || 'university'
+    const pattern = INDUSTRY_PATTERNS[template]
+    if (pattern) {
+      setMonthlyPattern({
+        monthlyGrowthRate: pattern.monthlyGrowthRate,
+        queriesPerActiveUser: pattern.queriesPerActiveUser,
+        turnsPerQuery: pattern.turnsPerQuery
+      })
+    }
+  }, [initialDimensions.selectedTemplate])
+
+  // 添加计算结果的状态
+  const [calculationResult, setCalculationResult] = useState<{
+    initialUsage: any;
+    monthlyUsage: any;
+    costs: any;
+  } | null>(null);
+
+  // 计算函数
+  const handleCalculate = () => {
+    const initial = calculateInitialUsage(initialDimensions);
+    const monthly = calculateMonthlyUsage(monthlyDimensions);
+    const costs = calculateCost(initial, monthly);
+    
+    setCalculationResult({
+      initialUsage: initial,
+      monthlyUsage: monthly,
+      costs: costs
+    });
+  };
+
   return (
     <div className="space-y-8">
       <div className="bg-white rounded-lg shadow-lg p-6">
@@ -423,28 +507,112 @@ export function TokenEstimator({ lang }: { lang: string }) {
         />
       </div>
 
+      {/* 新增：月度使用量配置 */}
       <div className="bg-white rounded-lg shadow-lg p-6">
         <h3 className="text-lg font-medium text-gray-900 mb-6">
-          月度使用量
+          月度使用量配置
         </h3>
-        <UsageDimensions
-          dimensions={monthlyDimensions}
-          onChange={setMonthlyDimensions}
-          type="monthly"
-        />
+        <div className="space-y-6">
+          <div>
+            <h4 className="text-sm font-medium text-gray-900 mb-4">使用模式配置</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  月度文档增长率
+                </label>
+                <NumericInput
+                  value={monthlyPattern.monthlyGrowthRate * 100}
+                  onChange={(value) => handlePatternChange({ 
+                    monthlyGrowthRate: (value as number) / 100 
+                  })}
+                  min={1}
+                  max={100}
+                  step={1}
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  每月新增文档占现有文档的百分比
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  人均日查询次数
+                </label>
+                <NumericInput
+                  value={monthlyPattern.queriesPerActiveUser}
+                  onChange={(value) => handlePatternChange({ 
+                    queriesPerActiveUser: value as number 
+                  })}
+                  min={1}
+                  max={20}
+                  step={1}
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  每个活跃用户的日均查询次数
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  平均对话轮次
+                </label>
+                <NumericInput
+                  value={monthlyPattern.turnsPerQuery}
+                  onChange={(value) => handlePatternChange({ 
+                    turnsPerQuery: value as number 
+                  })}
+                  min={1}
+                  max={10}
+                  step={1}
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  每次查询的平均对话来回次数
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-4 bg-gray-50 rounded-lg">
+            <h5 className="text-sm font-medium text-gray-900 mb-2">行业参考值</h5>
+            <div className="text-sm text-gray-600">
+              {INDUSTRY_PATTERNS[initialDimensions.selectedTemplate || 'university'].description}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 计算按钮 */}
+      <div className="flex justify-center">
+        <button
+          onClick={handleCalculate}
+          className="px-8 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 
+                   transition-colors font-medium text-lg shadow-sm
+                   flex items-center space-x-2"
+        >
+          <svg 
+            className="w-5 h-5" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" 
+            />
+          </svg>
+          <span>计算成本预估</span>
+        </button>
       </div>
 
       {/* 预估结果 */}
-      <EstimationResults 
-        initialUsage={calculateInitialUsage(initialDimensions)}
-        monthlyUsage={calculateMonthlyUsage(monthlyDimensions)}
-        costs={calculateCost(
-          calculateInitialUsage(initialDimensions),
-          calculateMonthlyUsage(monthlyDimensions)
-        )}
-        teamSize={initialDimensions.teamSize}
-        industry={initialDimensions.industry}
-      />
+      {calculationResult && (
+        <EstimationResults 
+          initialUsage={calculationResult.initialUsage}
+          monthlyUsage={calculationResult.monthlyUsage}
+          costs={calculationResult.costs}
+          teamSize={initialDimensions.teamSize}
+        />
+      )}
     </div>
   )
 } 
