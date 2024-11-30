@@ -71,22 +71,40 @@ interface ModelPrice {
 // 添加行业特性配置
 const INDUSTRY_PATTERNS = {
   university: {
-    monthlyGrowthRate: 0.10,  // 10% 文档月增长率
-    queriesPerActiveUser: 5,   // 每人每天5次查询
-    turnsPerQuery: 5,          // 每次查询5轮对话
-    description: '高校的文档增长较为稳定，教师和学生都有较高的日常使用频率'
+    description: '高等院校的知识库通常包含大量的教学资料、研究论文、行政文档等。每位教职工平均每天会有3-5次查询，每次对话4-6轮。',
+    monthlyGrowthRate: 0.10,
+    queriesPerActiveUser: 5,
+    turnsPerQuery: 5
   },
   k12: {
-    monthlyGrowthRate: 0.05,   // 5% 文档月增长率
-    queriesPerActiveUser: 4,   // 每人每天4次查询
-    turnsPerQuery: 4,          // 每次查询4轮对话
-    description: '中小学的文档增长相对较少，使用频率适中'
+    description: '中小学校的知识库主要包含教案、试题、学生作业等教学资料。教师平均每天有2-4次查询，每次对话3-5轮。',
+    monthlyGrowthRate: 0.05,
+    queriesPerActiveUser: 3,
+    turnsPerQuery: 4
   },
   bank: {
-    monthlyGrowthRate: 0.15,   // 15% 文档月增长率
-    queriesPerActiveUser: 6,   // 每人每天6次查询
-    turnsPerQuery: 6,          // 每次查询6轮对话
-    description: '金融行业的文档增长快，且有较高的日常使用需求'
+    description: '银行的知识库包含大量的金融产品文档、操作手册、合规文件等。每位员工平均每天有4-6次查询，每次对话5-7轮。',
+    monthlyGrowthRate: 0.15,
+    queriesPerActiveUser: 5,
+    turnsPerQuery: 6
+  },
+  hospital: {
+    description: '医疗机构的知识库包含医疗指南、病例记录、治疗方案等专业资料。医护人员平均每天有5-8次查询，每次对话4-6轮。',
+    monthlyGrowthRate: 0.08,
+    queriesPerActiveUser: 7,
+    turnsPerQuery: 5
+  },
+  government: {
+    description: '政府机构的知识库包含政策文件、工作指南、档案资料等。工作人员平均每天有3-5次查询，每次对话4-6轮。',
+    monthlyGrowthRate: 0.05,
+    queriesPerActiveUser: 4,
+    turnsPerQuery: 5
+  },
+  manufacturing: {
+    description: '制造业的知识库包含技术规范、操作手册、质量标准等文档。技术人员平均每天有4-6次查询，每次对话3-5轮。',
+    monthlyGrowthRate: 0.12,
+    queriesPerActiveUser: 5,
+    turnsPerQuery: 4
   }
 }
 
@@ -145,7 +163,7 @@ export function TokenEstimator({ lang }: { lang: string }) {
     localStorage.setItem(STORAGE_KEYS.MODELS, JSON.stringify(models))
   }, [models])
 
-  // 保存选中的模型 ID
+  // 保存中的模型 ID
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.SELECTED_CHAT, selectedChatModelId)
   }, [selectedChatModelId])
@@ -250,7 +268,8 @@ export function TokenEstimator({ lang }: { lang: string }) {
       if (!count) return
       const numericCount = Number(count)
       const length = Number(dims.avgDocumentLength[docType]) || 0
-      const tokens = numericCount * length * tokenMultipliers[docType]
+      const multiplier = tokenMultipliers[docType]
+      const tokens = numericCount * length * multiplier
       totalEmbeddingTokens += tokens
     })
 
@@ -260,29 +279,16 @@ export function TokenEstimator({ lang }: { lang: string }) {
       totalEmbeddingTokens += personalDocsTokens
     }
 
-    // 行业复杂度调整
-    if (dims.industry) {
-      const industryMultipliers = {
-        education: 1.2,
-        finance: 1.3,
-        healthcare: 1.4,
-        manufacturing: 1.1,
-        retail: 1.0
-      }
-      totalEmbeddingTokens *= industryMultipliers[dims.industry] || 1.0
-    }
-
     return {
       embedding: totalEmbeddingTokens,
       documents: dims.documents,
       avgDocumentLength: dims.avgDocumentLength,
       teamSize: dims.teamSize,
-      industry: dims.industry
+      multipliers: tokenMultipliers
     }
   }
 
   const calculateMonthlyUsage = (dims: typeof monthlyDimensions) => {
-    // 获取当前选择的模板
     const selectedTemplate = dims.selectedTemplate || 'university'
     const pattern = INDUSTRY_PATTERNS[selectedTemplate]
 
@@ -295,9 +301,10 @@ export function TokenEstimator({ lang }: { lang: string }) {
       if (!count) return
       const numericCount = Number(count)
       const length = Number(initialDimensions.avgDocumentLength[docType]) || 0
+      const multiplier = tokenMultipliers[docType]
       const growthRate = pattern.monthlyGrowthRate
       const monthlyNewCount = Math.round(numericCount * growthRate)
-      const tokens = monthlyNewCount * length * tokenMultipliers[docType]
+      const tokens = monthlyNewCount * length * multiplier
       monthlyEmbeddingTokens += tokens
     })
 
@@ -394,7 +401,7 @@ export function TokenEstimator({ lang }: { lang: string }) {
             text: '基准倍率 (tokens/字符)',
             excel: '表格结构处理倍率',
             ppt: '布局和图片处理倍率',
-            pdf: '格式处理倍率',
+            pdf: '格式处理倍',
             word: 'Word 文档格式处理倍率',
             email: '邮件文档处理倍率',
             image: '每百万像素的 token 数',
@@ -465,10 +472,20 @@ export function TokenEstimator({ lang }: { lang: string }) {
     initialUsage: any;
     monthlyUsage: any;
     costs: any;
+    modelPrices: any;
   } | null>(null);
 
   // 计算函数
   const handleCalculate = () => {
+    // 获取选中的模型
+    const selectedEmbeddingModel = models.find(m => m.id === selectedEmbeddingModelId);
+    const selectedChatModel = models.find(m => m.id === selectedChatModelId);
+
+    if (!selectedEmbeddingModel || !selectedChatModel) {
+      console.error('Selected models not found');
+      return;
+    }
+
     const initial = calculateInitialUsage(initialDimensions);
     const monthly = calculateMonthlyUsage(monthlyDimensions);
     const costs = calculateCost(initial, monthly);
@@ -476,7 +493,12 @@ export function TokenEstimator({ lang }: { lang: string }) {
     setCalculationResult({
       initialUsage: initial,
       monthlyUsage: monthly,
-      costs: costs
+      costs: costs,
+      modelPrices: {
+        embedding: selectedEmbeddingModel.inputPrice,
+        chatInput: selectedChatModel.inputPrice,
+        chatOutput: selectedChatModel.outputPrice || selectedChatModel.inputPrice
+      }
     });
   };
 
@@ -579,6 +601,15 @@ export function TokenEstimator({ lang }: { lang: string }) {
         </div>
       </div>
 
+      <div className="p-4 bg-gray-50 rounded-lg mt-4">
+        <h5 className="text-sm font-medium text-gray-900 mb-2">成本构成说明</h5>
+        <div className="space-y-2 text-sm text-gray-600">
+          <p>• 向量化成本：每月新增文档的向量化费用（月增长率 × 初始文档量）</p>
+          <p>• 对话输入成本：活跃用户 × 日均查询次数 × 30天 × 每次查询token数</p>
+          <p>• 对话输出成本：对话输入token × 输出比例（默认0.7）</p>
+        </div>
+      </div>
+
       {/* 计算按钮 */}
       <div className="flex justify-center">
         <button
@@ -611,6 +642,7 @@ export function TokenEstimator({ lang }: { lang: string }) {
           monthlyUsage={calculationResult.monthlyUsage}
           costs={calculationResult.costs}
           teamSize={initialDimensions.teamSize}
+          modelPrices={calculationResult.modelPrices}
         />
       )}
     </div>

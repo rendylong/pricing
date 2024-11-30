@@ -124,6 +124,84 @@ export function UsageDimensions({
         monthlyGrowthRate: 0.15,
         queriesPerActiveUser: 6,
         turnsPerQuery: 6
+      },
+      hospital: {
+        documents: {
+          text: 25000,
+          excel: 20000,
+          ppt: 3000,
+          pdf: 35000,
+          word: 30000,
+          email: 8000,
+          image: 5000
+        },
+        avgDocumentLength: {
+          text: 2500,
+          excel: 6000,
+          ppt: 1200,
+          pdf: 3500,
+          word: 3000,
+          email: 800
+        },
+        teamSize: {
+          total: 800,
+          activeUsers: 240
+        },
+        monthlyGrowthRate: 0.08,
+        queriesPerActiveUser: 7,
+        turnsPerQuery: 5
+      },
+      government: {
+        documents: {
+          text: 40000,
+          excel: 30000,
+          ppt: 8000,
+          pdf: 45000,
+          word: 35000,
+          email: 15000,
+          image: 3000
+        },
+        avgDocumentLength: {
+          text: 3500,
+          excel: 7000,
+          ppt: 1800,
+          pdf: 4500,
+          word: 4000,
+          email: 1200
+        },
+        teamSize: {
+          total: 2000,
+          activeUsers: 600
+        },
+        monthlyGrowthRate: 0.05,
+        queriesPerActiveUser: 4,
+        turnsPerQuery: 5
+      },
+      manufacturing: {
+        documents: {
+          text: 15000,
+          excel: 35000,
+          ppt: 4000,
+          pdf: 25000,
+          word: 15000,
+          email: 7000,
+          image: 4000
+        },
+        avgDocumentLength: {
+          text: 2000,
+          excel: 10000,
+          ppt: 1500,
+          pdf: 3000,
+          word: 2500,
+          email: 700
+        },
+        teamSize: {
+          total: 600,
+          activeUsers: 180
+        },
+        monthlyGrowthRate: 0.12,
+        queriesPerActiveUser: 5,
+        turnsPerQuery: 4
       }
     }
 
@@ -222,6 +300,51 @@ export function UsageDimensions({
               <p>• 500人团队规模</p>
               <p>• 122,000份各类文档</p>
               <p>• 适用于银行和金融机构</p>
+            </div>
+          </button>
+          <button
+            onClick={() => handleTemplateSelect('hospital')}
+            className={`p-6 border rounded-lg transition-colors text-left ${
+              selectedTemplate === 'hospital'
+                ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-500'
+                : 'hover:border-primary-500 hover:bg-primary-50'
+            }`}
+          >
+            <h5 className="text-lg font-medium mb-2">医疗机构</h5>
+            <div className="space-y-2 text-sm text-gray-600">
+              <p>• 800人团队规模</p>
+              <p>• 126,000份各类文档</p>
+              <p>• 适用于医院、诊所</p>
+            </div>
+          </button>
+          <button
+            onClick={() => handleTemplateSelect('government')}
+            className={`p-6 border rounded-lg transition-colors text-left ${
+              selectedTemplate === 'government'
+                ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-500'
+                : 'hover:border-primary-500 hover:bg-primary-50'
+            }`}
+          >
+            <h5 className="text-lg font-medium mb-2">政府机构</h5>
+            <div className="space-y-2 text-sm text-gray-600">
+              <p>• 2,000人团队规模</p>
+              <p>• 176,000份各类文档</p>
+              <p>• 适用于政府部门</p>
+            </div>
+          </button>
+          <button
+            onClick={() => handleTemplateSelect('manufacturing')}
+            className={`p-6 border rounded-lg transition-colors text-left ${
+              selectedTemplate === 'manufacturing'
+                ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-500'
+                : 'hover:border-primary-500 hover:bg-primary-50'
+            }`}
+          >
+            <h5 className="text-lg font-medium mb-2">制造业</h5>
+            <div className="space-y-2 text-sm text-gray-600">
+              <p>• 600人团队规模</p>
+              <p>• 105,000份各类文档</p>
+              <p>• 适用于制造企业</p>
             </div>
           </button>
         </div>
