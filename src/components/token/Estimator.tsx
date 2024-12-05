@@ -375,6 +375,26 @@ interface CalculationResult {
   };
 }
 
+// 添加 TokenMultipliers 类型定义
+type TokenMultipliers = {
+  text: number | '';
+  excel: number | '';
+  ppt: number | '';
+  pdf: number | '';
+  word: number | '';
+  email: number | '';
+  image: number | '';
+  audio: number | '';
+  video: number | '';
+};
+
+// 添加 MonthlyPattern 类型定义
+type MonthlyPattern = {
+  monthlyGrowthRate: number | '';
+  queriesPerActiveUser: number | '';
+  turnsPerQuery: number | '';
+};
+
 export function TokenEstimator() {
   // 从 localStorage 初始化状
   const [models, setModels] = useState<ModelPrice[]>(() => {
@@ -395,7 +415,7 @@ export function TokenEstimator() {
     return savedId || DEFAULT_MODELS[0].id
   })
 
-  const [tokenMultipliers, setTokenMultipliers] = useState(() => {
+  const [tokenMultipliers, setTokenMultipliers] = useState<TokenMultipliers>(() => {
     if (typeof window === 'undefined') return DEFAULT_TOKEN_MULTIPLIERS
     const savedMultipliers = localStorage.getItem(STORAGE_KEYS.TOKEN_MULTIPLIERS)
     return savedMultipliers ? JSON.parse(savedMultipliers) : DEFAULT_TOKEN_MULTIPLIERS
@@ -429,7 +449,7 @@ export function TokenEstimator() {
     selectedTemplate: 'university' as keyof typeof INDUSTRY_PATTERNS
   })
 
-  const [monthlyPattern, setMonthlyPattern] = useState({
+  const [monthlyPattern, setMonthlyPattern] = useState<MonthlyPattern>({
     monthlyGrowthRate: 0.10,
     queriesPerActiveUser: 5,
     turnsPerQuery: 5
@@ -660,9 +680,9 @@ export function TokenEstimator() {
                 {labels[type]}
               </label>
               <NumericInput
-                value={multiplier as number}
+                value={multiplier}
                 onChange={(value) => {
-                  setTokenMultipliers(prev => ({
+                  setTokenMultipliers((prev: TokenMultipliers) => ({
                     ...prev,
                     [type]: value
                   }))
@@ -791,7 +811,7 @@ export function TokenEstimator() {
   };
 
   // 添加 handlePatternChange 函数
-  const handlePatternChange = (updates: Partial<typeof monthlyPattern>) => {
+  const handlePatternChange = (updates: Partial<MonthlyPattern>) => {
     setMonthlyPattern(prev => ({
       ...prev,
       ...updates
