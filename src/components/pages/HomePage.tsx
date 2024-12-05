@@ -9,8 +9,6 @@ interface HomePageProps {
 }
 
 export function HomePage({ lang }: HomePageProps) {
-  const { t } = useTranslation('common')
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />

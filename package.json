@@ -26,6 +26,7 @@
     "postcss": "^8.4.29",
     "tailwindcss": "^3.3.3",
     "typescript": "^5.2.2",
-    "@types/negotiator": "^0.6.3"
+    "@types/negotiator": "^0.6.3",
+    "eslint": "^8.56.0"
   }
 }
