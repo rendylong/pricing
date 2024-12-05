@@ -257,7 +257,7 @@ export function PricingCalculator() {
         <div className="flex justify-between items-center mb-2">
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-900">
-              存储空间价格
+              向量存储价格
             </label>
             <p className="text-xs text-gray-500">每100MB存储空间的价格</p>
           </div>

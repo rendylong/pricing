@@ -93,7 +93,7 @@ interface IndustryPattern {
 // 添加行业特性配置
 const INDUSTRY_PATTERNS: Record<string, IndustryPattern> = {
   bank: {
-    description: '银行的知识库以金融��品文档、合规文件和报表为主。Excel、PDF占比较高，反映了金融行业数据分析和规范化文档的需求。人均文档量较大。',
+    description: '银行的知识库以金融品文档、合规文件和报表为主。Excel、PDF占比较高，反映了金融行业数据分析和规范化文档的需求。人均文档量较大。',
     monthlyGrowthRate: 0.15,
     queriesPerActiveUser: 5,
     turnsPerQuery: 6,
@@ -164,7 +164,7 @@ const INDUSTRY_PATTERNS: Record<string, IndustryPattern> = {
           ppt: 8,       // 课件
           excel: 4,     // 成绩单
           text: 6,      // 普通文本
-          email: 15,    // 邮件
+          email: 15,    // 邮���
           image: 5      // 教学图片
         }
       }
@@ -213,7 +213,7 @@ const BASE_PRICING = {
   messagePrice: 10,       // 每1000条消息 $10
   storageUnit: 100,       // 存储计费单位(MB)
   storagePrice: 15,       // 每100MB存储 $15
-  minUsers: 3,            // 最少用户��
+  minUsers: 3,            // 最少用户
   minMessages: 5000,      // 最少消息数
   minStorage: 200,        // 最少存储空间(MB)
 } as const;
@@ -446,35 +446,61 @@ export function TokenEstimator() {
     }
   }
 
-  const calculateInitialUsage = (dims: typeof initialDimensions) => {
+  const calculateInitialUsage = (dimensions: {
+    documents: Record<string, string | number>;
+    avgDocumentLength: Record<string, string | number>;
+    teamSize: {
+      total: number;
+      activeUsers: number;
+    };
+  }): {
+    embedding: number;
+    documents: Record<string, number>;
+    avgDocumentLength: Record<string, number>;
+    multipliers: Record<string, number>;
+  } => {
     let totalEmbeddingTokens = 0
 
     // 计算文档 token
-    Object.entries(dims.documents).forEach(([docType, count]) => {
+    Object.entries(dimensions.documents).forEach(([docType, count]) => {
       if (!count) return
       const numericCount = Number(count)
-      const length = Number(dims.avgDocumentLength[docType as keyof typeof dims.avgDocumentLength]) || 0
+      const length = Number(dimensions.avgDocumentLength[docType as keyof typeof dimensions.avgDocumentLength]) || 0
       const multiplier = tokenMultipliers[docType as keyof typeof tokenMultipliers]
       const tokens = numericCount * length * multiplier
       totalEmbeddingTokens += tokens
     })
 
     // 计算团队个人文档
-    if (dims.teamSize?.activeUsers) {
-      const personalDocsTokens = dims.teamSize.activeUsers * 50 * 2000 * tokenMultipliers.text
+    if (dimensions.teamSize?.activeUsers) {
+      const personalDocsTokens = dimensions.teamSize.activeUsers * 50 * 2000 * tokenMultipliers.text
       totalEmbeddingTokens += personalDocsTokens
     }
 
     return {
       embedding: totalEmbeddingTokens,
-      documents: dims.documents,
-      avgDocumentLength: dims.avgDocumentLength,
-      teamSize: dims.teamSize,
+      documents: dimensions.documents,
+      avgDocumentLength: dimensions.avgDocumentLength,
+      teamSize: dimensions.teamSize,
       multipliers: tokenMultipliers
     }
   }
 
-  const calculateMonthlyUsage = (dims: typeof monthlyDimensions) => {
+  const calculateMonthlyUsage = (dimensions: {
+    documents: Record<string, string | number>;
+    avgDocumentLength: Record<string, string | number>;
+    dailyQueries?: string | number;
+    conversationTurns?: string | number;
+  }): {
+    embedding: number;
+    chatInput: number;
+    chatOutput: number;
+    pattern: {
+      monthlyGrowthRate: number;
+      queriesPerActiveUser: number;
+      turnsPerQuery: number;
+    };
+  } => {
     const selectedTemplate = initialDimensions.selectedTemplate
     const pattern = INDUSTRY_PATTERNS[selectedTemplate]
 
@@ -518,8 +544,8 @@ export function TokenEstimator() {
       embedding: monthlyEmbeddingTokens,
       chatInput: monthlyChatInputTokens,
       chatOutput: monthlyChatOutputTokens,
-      documents: dims.documents,
-      avgDocumentLength: dims.avgDocumentLength,
+      documents: dimensions.documents,
+      avgDocumentLength: dimensions.avgDocumentLength,
       pattern: {
         monthlyGrowthRate: pattern.monthlyGrowthRate,
         queriesPerActiveUser: pattern.queriesPerActiveUser,
@@ -968,7 +994,7 @@ export function TokenEstimator() {
             
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-sm font-medium text-gray-900">存储空间</p>
+                <p className="text-sm font-medium text-gray-900">向量存储</p>
                 <p className="text-xs text-gray-500">
                   {Math.ceil(initialDimensions.vectorStorage / BASE_PRICING.storageUnit)} 
                   × ${BASE_PRICING.storagePrice}/{BASE_PRICING.storageUnit}MB

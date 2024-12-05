@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { Select } from '@/components/ui/Select'
 import { NumericInput } from '@/components/ui/NumericInput'
 
 interface Dimensions {
@@ -85,6 +84,8 @@ export function UsageDimensions({ dimensions, onChange, type }: UsageDimensionsP
       return sum + num
     }, 0).toLocaleString()
   }
+
+  const showMonthlyFields = type === 'monthly'
 
   return (
     <div className="space-y-6">
@@ -245,6 +246,12 @@ export function UsageDimensions({ dimensions, onChange, type }: UsageDimensionsP
           </div>
         </details>
       </div>
+
+      {showMonthlyFields && (
+        <div>
+          {/* 月度特有的配置项 */}
+        </div>
+      )}
     </div>
   )
 } 
