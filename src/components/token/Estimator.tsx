@@ -216,6 +216,60 @@ const DEFAULT_DOC_LENGTHS = {
   email: '800'
 }
 
+// 添加基础价格配置
+const BASE_PRICING = {
+  userPrice: 20,          // 每用户月费 $20
+  messageUnit: 1000,      // 消息计费单位
+  messagePrice: 10,       // 每1000条消息 $10
+  storageUnit: 100,       // 存储计费单位(MB)
+  storagePrice: 15,       // 每100MB存储 $15
+  minUsers: 3,            // 最少用户数
+  minMessages: 5000,      // 最少消息数
+  minStorage: 200,        // 最少存储空间(MB)
+} as const;
+
+// 添加价格计算函数
+const calculateBasicPrice = (
+  users: number,
+  messages: number,
+  storage: number,
+  storageUnit: 'MB' | 'GB'
+): {
+  userCost: number;
+  messageCost: number;
+  storageCost: number;
+  total: number;
+} => {
+  // 确保不低于最小值
+  const actualUsers = Math.max(users, BASE_PRICING.minUsers);
+  const actualMessages = Math.max(messages, BASE_PRICING.minMessages);
+  
+  // 转换存储单位到MB
+  const storageInMB = storageUnit === 'GB' ? storage * 1024 : storage;
+  const actualStorage = Math.max(storageInMB, BASE_PRICING.minStorage);
+
+  // 计算用户费用
+  const userCost = actualUsers * BASE_PRICING.userPrice;
+
+  // 计算消息费用
+  const messageUnits = Math.ceil(actualMessages / BASE_PRICING.messageUnit);
+  const messageCost = messageUnits * BASE_PRICING.messagePrice;
+
+  // 计算存储费用
+  const storageUnits = Math.ceil(actualStorage / BASE_PRICING.storageUnit);
+  const storageCost = storageUnits * BASE_PRICING.storagePrice;
+
+  // 计算总费用
+  const total = userCost + messageCost + storageCost;
+
+  return {
+    userCost,
+    messageCost,
+    storageCost,
+    total
+  };
+};
+
 export function TokenEstimator({ lang }: { lang: string }) {
   // 从 localStorage 初始化状态
   const [models, setModels] = useState<ModelPrice[]>(() => {
@@ -586,6 +640,14 @@ export function TokenEstimator({ lang }: { lang: string }) {
     modelPrices: any;
   } | null>(null);
 
+  // 在 TokenEstimator 组件中添加价格计算结果状态
+  const [basicPrice, setBasicPrice] = useState<{
+    userCost: number;
+    messageCost: number;
+    storageCost: number;
+    total: number;
+  } | null>(null);
+
   // 计函数
   const handleCalculate = () => {
     // 获取选中的模型
@@ -611,6 +673,16 @@ export function TokenEstimator({ lang }: { lang: string }) {
         chatOutput: selectedChatModel.outputPrice || selectedChatModel.inputPrice
       }
     });
+
+    // 计算基础价格
+    const price = calculateBasicPrice(
+      initialDimensions.teamSize.total,
+      monthlyPattern.queriesPerActiveUser * initialDimensions.teamSize.activeUsers * 30, // 月度消息数
+      initialDimensions.vectorStorage,
+      'MB'
+    );
+    
+    setBasicPrice(price);
   };
 
   // 修改计算文档数量的函数
@@ -843,6 +915,62 @@ export function TokenEstimator({ lang }: { lang: string }) {
           teamSize={initialDimensions.teamSize}
           modelPrices={calculationResult.modelPrices}
         />
+      )}
+
+      {calculationResult && basicPrice && (
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-6">
+            基础服务费用
+          </h3>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-sm font-medium text-gray-900">用户许可</p>
+                <p className="text-xs text-gray-500">
+                  {initialDimensions.teamSize.total} 用户 × ${BASE_PRICING.userPrice}/用户
+                </p>
+              </div>
+              <p className="text-lg font-medium text-gray-900">
+                ${basicPrice.userCost}
+              </p>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-sm font-medium text-gray-900">消息额度</p>
+                <p className="text-xs text-gray-500">
+                  {Math.ceil(monthlyPattern.queriesPerActiveUser * initialDimensions.teamSize.activeUsers * 30 / BASE_PRICING.messageUnit)} 
+                  × ${BASE_PRICING.messagePrice}/{BASE_PRICING.messageUnit}条
+                </p>
+              </div>
+              <p className="text-lg font-medium text-gray-900">
+                ${basicPrice.messageCost}
+              </p>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-sm font-medium text-gray-900">存储空间</p>
+                <p className="text-xs text-gray-500">
+                  {Math.ceil(initialDimensions.vectorStorage / BASE_PRICING.storageUnit)} 
+                  × ${BASE_PRICING.storagePrice}/{BASE_PRICING.storageUnit}MB
+                </p>
+              </div>
+              <p className="text-lg font-medium text-gray-900">
+                ${basicPrice.storageCost}
+              </p>
+            </div>
+            
+            <div className="pt-4 border-t border-gray-200">
+              <div className="flex justify-between items-center">
+                <p className="text-base font-medium text-gray-900">基础服务月费</p>
+                <p className="text-2xl font-bold text-primary-600">
+                  ${basicPrice.total}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
