@@ -4,7 +4,7 @@ import React from 'react'
 import { TokenEstimator } from '@/components/token/Estimator'
 import { Header } from '@/components/layout/Header'
 
-export default function Page() {
+export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />

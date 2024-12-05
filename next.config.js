@@ -1,9 +1,19 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  poweredByHeader: false,
-  reactStrictMode: true,
-  swcMinify: true
+  experimental: {
+    appDir: true,
+  },
+  pageExtensions: ['tsx', 'ts'],
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        fs: false,
+        path: false,
+      }
+    }
+    return config
+  },
 }
 
 module.exports = nextConfig 
