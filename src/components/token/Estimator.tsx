@@ -466,40 +466,41 @@ export function TokenEstimator() {
       total: number;
       activeUsers: number;
     };
-  }): {
-    embedding: number;
-    documents: Record<string, string>;
-    avgDocumentLength: Record<string, string>;
-    multipliers: Record<string, number>;
-  } => {
+  }) => {
     let totalEmbeddingTokens = 0
 
     // 转换输入值为数字并计算
     const convertedDocuments = Object.entries(dimensions.documents).reduce((acc, [key, value]) => {
       const numValue = Number(value) || 0
-      acc[key] = String(numValue) // 转换回字符串以匹配类型
+      acc[key] = String(numValue)
       return acc
     }, {} as Record<string, string>)
 
     const convertedLengths = Object.entries(dimensions.avgDocumentLength).reduce((acc, [key, value]) => {
       const numValue = Number(value) || 0
-      acc[key] = String(numValue) // 转换回字符串以匹配类型
+      acc[key] = String(numValue)
       return acc
     }, {} as Record<string, string>)
 
     // 计算总 token
     Object.entries(convertedDocuments).forEach(([docType, count]) => {
       const length = Number(convertedLengths[docType]) || 0
-      const multiplier = tokenMultipliers[docType as keyof typeof tokenMultipliers]
+      const multiplier = Number(tokenMultipliers[docType as keyof TokenMultipliers]) || 0
       const tokens = Number(count) * length * multiplier
       totalEmbeddingTokens += tokens
     })
+
+    // 将 tokenMultipliers 转换为纯数字类型
+    const numericMultipliers = Object.entries(tokenMultipliers).reduce((acc, [key, value]) => {
+      acc[key] = Number(value) || 0
+      return acc
+    }, {} as Record<string, number>)
 
     return {
       embedding: totalEmbeddingTokens,
       documents: convertedDocuments,
       avgDocumentLength: convertedLengths,
-      multipliers: tokenMultipliers
+      multipliers: numericMultipliers
     }
   }
 
@@ -737,8 +738,8 @@ export function TokenEstimator() {
       if (!count) return
       const numericCount = Number(count)
       const length = Number(initialDimensions.avgDocumentLength[docType as keyof typeof initialDimensions.avgDocumentLength]) || 0
-      const multiplier = tokenMultipliers[docType as keyof typeof tokenMultipliers]
-      const growthRate = pattern.monthlyGrowthRate
+      const multiplier = Number(tokenMultipliers[docType as keyof TokenMultipliers]) || 0
+      const growthRate = Number(monthlyPattern.monthlyGrowthRate) || 0
       const monthlyNewCount = Math.round(numericCount * growthRate)
       const tokens = monthlyNewCount * length * multiplier
       monthlyEmbeddingTokens += tokens
@@ -746,15 +747,15 @@ export function TokenEstimator() {
 
     // 计算对话 token
     const activeUsers = initialDimensions.teamSize?.activeUsers || 0
-    const queriesPerUser = pattern.queriesPerActiveUser
-    const turnsPerQuery = pattern.turnsPerQuery
+    const queriesPerUser = Number(monthlyPattern.queriesPerActiveUser) || 0
+    const turnsPerQuery = Number(monthlyPattern.turnsPerQuery) || 0
     const monthlyQueries = activeUsers * queriesPerUser * 30
 
     const tokensPerQuery = {
-      input: 200,    // 用户输入的平均token数
-      context: 2000, // 上下文的平均token数
-      systemPrompt: 300, // 系统提示的token数
-      outputMultiplier: 0.7 // 输出token与输入token的比
+      input: 200,
+      context: 2000,
+      systemPrompt: 300,
+      outputMultiplier: 0.7
     }
 
     const tokensPerConversation = 
@@ -897,7 +898,7 @@ export function TokenEstimator() {
                   月度文档增长率
                 </label>
                 <NumericInput
-                  value={monthlyPattern.monthlyGrowthRate * 100}
+                  value={Number(monthlyPattern.monthlyGrowthRate) * 100 || 0}
                   onChange={(value) => {
                     handlePatternChange({ 
                       monthlyGrowthRate: value !== '' ? value / 100 : ''
