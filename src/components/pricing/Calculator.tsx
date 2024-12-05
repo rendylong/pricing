@@ -283,11 +283,6 @@ export function PricingCalculator() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-5xl mx-auto">
-        {/* 标题区域 */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">定制您的计划</h2>
-          <p className="text-lg text-gray-600">根据您的需求选择合适的配置</p>
-        </div>
 
         {/* 付费周期选择 */}
         <div className="mb-12">
