@@ -11,9 +11,13 @@ function getLocale(request: NextRequest): string {
   request.headers.forEach((value, key) => (negotiatorHeaders[key] = value))
 
   const languages = new Negotiator({ headers: negotiatorHeaders }).languages()
-  const locale = matchLocale(languages, locales, defaultLocale)
   
-  return locale
+  try {
+    const locale = matchLocale(languages, locales, defaultLocale)
+    return locale
+  } catch (e) {
+    return defaultLocale
+  }
 }
 
 export function middleware(request: NextRequest) {
@@ -26,13 +30,13 @@ export function middleware(request: NextRequest) {
   if (pathnameIsMissingLocale) {
     const locale = getLocale(request)
     return NextResponse.redirect(
-      new URL(`/${locale}${pathname === '/' ? '' : pathname}`, request.url)
+      new URL(`/${locale}${pathname}`, request.url)
     )
   }
 }
 
 export const config = {
   matcher: [
-    '/((?!_next|api|assets|favicon.ico).*)',
+    '/((?!_next|api|favicon.ico).*)',
   ],
 } 
