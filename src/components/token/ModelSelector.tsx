@@ -15,13 +15,11 @@ export function ModelSelector({
   onChatModelChange,
   onEmbeddingModelChange
 }: ModelSelectorProps) {
-  const { t } = useTranslation('common')
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          {t('token.models.chat')}
+          选择对话模型
         </label>
         <Select
           value={chatModel}
@@ -34,7 +32,7 @@ export function ModelSelector({
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          {t('token.models.embedding')}
+          选择向量化模型
         </label>
         <Select
           value={embeddingModel}

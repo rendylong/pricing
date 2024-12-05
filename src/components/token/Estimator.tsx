@@ -877,7 +877,21 @@ export function TokenEstimator() {
                 newDimensions.teamSize.activeUsers !== initialDimensions.teamSize.activeUsers) {
               handleTeamSizeChange(newDimensions.teamSize)
             } else {
-              setInitialDimensions(newDimensions)
+              setInitialDimensions((prev) => ({
+                ...prev,
+                documents: {
+                  ...prev.documents,
+                  ...newDimensions.documents
+                },
+                avgDocumentLength: {
+                  ...prev.avgDocumentLength,
+                  ...newDimensions.avgDocumentLength
+                },
+                teamSize: newDimensions.teamSize,
+                selectedTemplate: newDimensions.selectedTemplate || prev.selectedTemplate,
+                avgImageCount: String(newDimensions.avgImageCount),
+                avgImageSize: String(newDimensions.avgImageSize)
+              }))
             }
           }}
           type="initial"

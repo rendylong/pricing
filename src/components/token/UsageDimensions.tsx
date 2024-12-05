@@ -193,8 +193,16 @@ export function UsageDimensions({ dimensions, onChange, type }: UsageDimensionsP
                       <td className="px-4 py-3">
                         <div className="w-32">
                           <NumericInput
-                            value={dimensions.documents[type as keyof typeof dimensions.documents] || ''}
-                            onChange={(value) => handleDocumentChange(type, value)}
+                            value={dimensions.documents[type as keyof typeof dimensions.documents] === '' ? '' : Number(dimensions.documents[type as keyof typeof dimensions.documents])}
+                            onChange={(newValue) => {
+                              onChange({
+                                ...dimensions,
+                                documents: {
+                                  ...dimensions.documents,
+                                  [type]: String(newValue)
+                                }
+                              })
+                            }}
                             placeholder="数量"
                             className="text-right"
                           />
@@ -204,8 +212,16 @@ export function UsageDimensions({ dimensions, onChange, type }: UsageDimensionsP
                         {type !== 'image' ? (
                           <div className="w-32">
                             <NumericInput
-                              value={dimensions.avgDocumentLength[type as keyof typeof dimensions.avgDocumentLength] || ''}
-                              onChange={(value) => handleLengthChange(type, value)}
+                              value={dimensions.avgDocumentLength[type as keyof typeof dimensions.avgDocumentLength] === '' ? '' : Number(dimensions.avgDocumentLength[type as keyof typeof dimensions.avgDocumentLength])}
+                              onChange={(newValue) => {
+                                onChange({
+                                  ...dimensions,
+                                  avgDocumentLength: {
+                                    ...dimensions.avgDocumentLength,
+                                    [type]: String(newValue)
+                                  }
+                                })
+                              }}
                               placeholder="字符数"
                               className="text-right"
                             />
@@ -213,11 +229,13 @@ export function UsageDimensions({ dimensions, onChange, type }: UsageDimensionsP
                         ) : (
                           <div className="w-32">
                             <NumericInput
-                              value={dimensions.avgImageSize || ''}
-                              onChange={(value) => onChange({
-                                ...dimensions,
-                                avgImageSize: value
-                              })}
+                              value={dimensions.avgImageSize === '' ? '' : Number(dimensions.avgImageSize)}
+                              onChange={(value) => {
+                                onChange({
+                                  ...dimensions,
+                                  avgImageSize: String(value)
+                                })
+                              }}
                               placeholder="像素数"
                               className="text-right"
                             />

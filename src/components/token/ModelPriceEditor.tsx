@@ -140,9 +140,8 @@ export function ModelPriceEditor({
                             </span>
                           </label>
                           <NumericInput
-                            value={model.inputPrice}
+                            value={model.inputPrice || ''}
                             onChange={(value) => handleModelChange(model.id, { inputPrice: value })}
-                            placeholder="请输入价格"
                           />
                         </div>
                         <div>
@@ -155,7 +154,6 @@ export function ModelPriceEditor({
                           <NumericInput
                             value={model.outputPrice || ''}
                             onChange={(value) => handleModelChange(model.id, { outputPrice: value })}
-                            placeholder="请输入价格"
                           />
                         </div>
                       </div>
@@ -264,7 +262,6 @@ export function ModelPriceEditor({
                         <NumericInput
                           value={model.inputPrice}
                           onChange={(value) => handleModelChange(model.id, { inputPrice: value })}
-                          placeholder="请输入价格"
                         />
                       </div>
                       <div className="flex justify-end pt-2">
