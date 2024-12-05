@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { ModelPriceEditor } from './ModelPriceEditor'
 import { EstimationResults } from './EstimationResults'
 import { UsageDimensions } from './UsageDimensions'
@@ -424,74 +424,54 @@ interface CostCalculationResult {
   };
 }
 
+// 首先修改类型定义
+interface CalculationDimensions {
+  documents: Record<string, number>;  // 改为 number 类型
+  avgDocumentLength: Record<string, number>;  // 改为 number 类型
+  teamSize: {
+    total: number;
+    activeUsers: number;
+  };
+}
+
+// 添加默认的 token multipliers
+const DEFAULT_TOKEN_MULTIPLIERS = {
+  text: 1.5,
+  excel: 1.67,
+  ppt: 2.0,
+  pdf: 1.87,
+  word: 1.8,
+  email: 1.3,
+  image: 300,
+  audio: 400,
+  video: 800
+};
+
 export function TokenEstimator() {
-  // 从 localStorage 初始化状态
+  // 从 localStorage 初始化状
   const [models, setModels] = useState<ModelPrice[]>(() => {
     if (typeof window === 'undefined') return DEFAULT_MODELS
-    
     const savedModels = localStorage.getItem(STORAGE_KEYS.MODELS)
     return savedModels ? JSON.parse(savedModels) : DEFAULT_MODELS
   })
 
   const [selectedChatModelId, setSelectedChatModelId] = useState<string>(() => {
     if (typeof window === 'undefined') return DEFAULT_MODELS[1].id
-    
     const savedId = localStorage.getItem(STORAGE_KEYS.SELECTED_CHAT)
     return savedId || DEFAULT_MODELS[1].id
   })
 
   const [selectedEmbeddingModelId, setSelectedEmbeddingModelId] = useState<string>(() => {
     if (typeof window === 'undefined') return DEFAULT_MODELS[0].id
-    
     const savedId = localStorage.getItem(STORAGE_KEYS.SELECTED_EMBEDDING)
     return savedId || DEFAULT_MODELS[0].id
   })
 
   const [tokenMultipliers, setTokenMultipliers] = useState(() => {
-    if (typeof window === 'undefined') return {
-      text: 1.5,
-      excel: 1.67,
-      ppt: 2.0,
-      pdf: 1.87,
-      word: 1.8,
-      email: 1.3,
-      image: 300,
-      audio: 400,
-      video: 800
-    }
-    
+    if (typeof window === 'undefined') return DEFAULT_TOKEN_MULTIPLIERS
     const savedMultipliers = localStorage.getItem(STORAGE_KEYS.TOKEN_MULTIPLIERS)
-    return savedMultipliers ? JSON.parse(savedMultipliers) : {
-      text: 1.5,
-      excel: 1.67,
-      ppt: 2.0,
-      pdf: 1.87,
-      word: 1.8,
-      email: 1.3,
-      image: 300,
-      audio: 400,
-      video: 800
-    }
+    return savedMultipliers ? JSON.parse(savedMultipliers) : DEFAULT_TOKEN_MULTIPLIERS
   })
-
-  // 保存模型数据到 localStorage
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.MODELS, JSON.stringify(models))
-  }, [models])
-
-  // 保存中的模型 ID
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.SELECTED_CHAT, selectedChatModelId)
-  }, [selectedChatModelId])
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.SELECTED_EMBEDDING, selectedEmbeddingModelId)
-  }, [selectedEmbeddingModelId])
-
-  // 保存 token 倍率
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.TOKEN_MULTIPLIERS, JSON.stringify(tokenMultipliers))
-  }, [tokenMultipliers])
 
   // 初始化使用量维度状态
   const [initialDimensions, setInitialDimensions] = useState({
@@ -521,7 +501,24 @@ export function TokenEstimator() {
     selectedTemplate: 'university' as keyof typeof INDUSTRY_PATTERNS
   })
 
-  // 月度使用量维度状态
+  const [monthlyPattern, setMonthlyPattern] = useState({
+    monthlyGrowthRate: 0.10,
+    queriesPerActiveUser: 5,
+    turnsPerQuery: 5
+  })
+
+  // 添加计算结果状态
+  const [calculationResult, setCalculationResult] = useState<CalculationResult | null>(null);
+
+  // 添加基础价格状态
+  const [basicPrice, setBasicPrice] = useState<{
+    userCost: number;
+    messageCost: number;
+    storageCost: number;
+    total: number;
+  } | null>(null);
+
+  // 添加月度使用量维度状态
   const [monthlyDimensions] = useState({
     documents: {
       text: '',
@@ -544,38 +541,9 @@ export function TokenEstimator() {
     avgImageSize: '',
     dailyQueries: '',
     conversationTurns: ''
-  })
+  });
 
-  const [monthlyPattern, setMonthlyPattern] = useState({
-    monthlyGrowthRate: 0.10,
-    queriesPerActiveUser: 5,
-    turnsPerQuery: 5
-  })
-
-  const handlePatternChange = (updates: Partial<typeof monthlyPattern>) => {
-    setMonthlyPattern(prev => ({
-      ...prev,
-      ...updates
-    }))
-  }
-
-  // 将函数移到组件内部
-  const handleModelsChange = (newModels: ModelPrice[]) => {
-    setModels(newModels)
-    
-    // 如果删除了当前选中的模型，选择同类型的第一个模型
-    const embeddingModels = newModels.filter(m => m.type === 'embedding')
-    const chatModels = newModels.filter(m => m.type === 'chat')
-
-    if (!newModels.find(m => m.id === selectedEmbeddingModelId) && embeddingModels.length > 0) {
-      setSelectedEmbeddingModelId(embeddingModels[0].id)
-    }
-
-    if (!newModels.find(m => m.id === selectedChatModelId) && chatModels.length > 0) {
-      setSelectedChatModelId(chatModels[0].id)
-    }
-  }
-
+  // 将计算函数移到组件内部并实现完整功能
   const calculateInitialUsage = (dimensions: {
     documents: Record<string, string | number>;
     avgDocumentLength: Record<string, string | number>;
@@ -583,146 +551,175 @@ export function TokenEstimator() {
       total: number;
       activeUsers: number;
     };
-  }): {
-    embedding: number;
-    documents: Record<string, number>;
-    avgDocumentLength: Record<string, number>;
-    multipliers: Record<string, number>;
-  } => {
+  }) => {
     let totalEmbeddingTokens = 0
 
+    // 转换输入值为数字
+    const convertedDocuments = Object.entries(dimensions.documents).reduce((acc, [key, value]) => {
+      acc[key] = Number(value) || 0
+      return acc
+    }, {} as Record<string, number>)
+
+    const convertedLengths = Object.entries(dimensions.avgDocumentLength).reduce((acc, [key, value]) => {
+      acc[key] = Number(value) || 0
+      return acc
+    }, {} as Record<string, number>)
+
     // 计算文档 token
-    Object.entries(dimensions.documents).forEach(([docType, count]) => {
-      if (!count) return
-      const numericCount = Number(count)
-      const length = Number(dimensions.avgDocumentLength[docType as keyof typeof dimensions.avgDocumentLength]) || 0
+    Object.entries(convertedDocuments).forEach(([docType, count]) => {
+      const length = convertedLengths[docType] || 0
       const multiplier = tokenMultipliers[docType as keyof typeof tokenMultipliers]
-      const tokens = numericCount * length * multiplier
+      const tokens = count * length * multiplier
       totalEmbeddingTokens += tokens
     })
 
-    // 计算团队个人文档
-    if (dimensions.teamSize?.activeUsers) {
-      const personalDocsTokens = dimensions.teamSize.activeUsers * 50 * 2000 * tokenMultipliers.text
-      totalEmbeddingTokens += personalDocsTokens
-    }
-
     return {
       embedding: totalEmbeddingTokens,
-      documents: dimensions.documents,
-      avgDocumentLength: dimensions.avgDocumentLength,
-      teamSize: dimensions.teamSize,
+      documents: convertedDocuments,
+      avgDocumentLength: convertedLengths,
       multipliers: tokenMultipliers
     }
   }
 
-  const calculateMonthlyUsage = (dimensions: {
-    documents: Record<string, string | number>;
-    avgDocumentLength: Record<string, string | number>;
-    dailyQueries?: string | number;
-    conversationTurns?: string | number;
-  }): {
-    embedding: number;
-    chatInput: number;
-    chatOutput: number;
-    pattern: {
-      monthlyGrowthRate: number;
-      queriesPerActiveUser: number;
-      turnsPerQuery: number;
-    };
-  } => {
-    const selectedTemplate = initialDimensions.selectedTemplate
-    const pattern = INDUSTRY_PATTERNS[selectedTemplate]
+  // 添加模板变更处理函数
+  const handleTemplateChange = (newTemplate: keyof typeof INDUSTRY_PATTERNS) => {
+    const pattern = INDUSTRY_PATTERNS[newTemplate];
+    const sizePattern = pattern.sizePatterns.small;
+    
+    setInitialDimensions(prev => {
+      const newDocuments = calculateDocumentCounts(
+        prev.teamSize.total,
+        sizePattern.documentsPerUser
+      );
 
-    let monthlyEmbeddingTokens = 0
-    let monthlyChatInputTokens = 0
-    let monthlyChatOutputTokens = 0
-
-    // 计算新增文档的向量化
-    Object.entries(initialDimensions.documents).forEach(([docType, count]) => {
-      if (!count) return
-      const numericCount = Number(count)
-      const length = Number(initialDimensions.avgDocumentLength[docType as keyof typeof initialDimensions.avgDocumentLength]) || 0
-      const multiplier = tokenMultipliers[docType as keyof typeof tokenMultipliers]
-      const growthRate = pattern.monthlyGrowthRate
-      const monthlyNewCount = Math.round(numericCount * growthRate)
-      const tokens = monthlyNewCount * length * multiplier
-      monthlyEmbeddingTokens += tokens
-    })
-
-    // 计算对话 token
-    const activeUsers = initialDimensions.teamSize?.activeUsers || 0
-    const queriesPerUser = pattern.queriesPerActiveUser
-    const turnsPerQuery = pattern.turnsPerQuery
-    const monthlyQueries = activeUsers * queriesPerUser * 30
-
-    const tokensPerQuery = {
-      input: 200,    // 用户输入的平均token数
-      context: 2000, // 上下文的平均token数
-      systemPrompt: 300, // 系统提示的token数
-      outputMultiplier: 0.7 // 输出token与输入token的比例
-    }
-
-    const tokensPerConversation = 
-      (tokensPerQuery.input + tokensPerQuery.context + tokensPerQuery.systemPrompt) * 
-      turnsPerQuery
-
-    monthlyChatInputTokens = monthlyQueries * tokensPerConversation
-    monthlyChatOutputTokens = monthlyChatInputTokens * tokensPerQuery.outputMultiplier
-
-    return {
-      embedding: monthlyEmbeddingTokens,
-      chatInput: monthlyChatInputTokens,
-      chatOutput: monthlyChatOutputTokens,
-      documents: dimensions.documents,
-      avgDocumentLength: dimensions.avgDocumentLength,
-      pattern: {
-        monthlyGrowthRate: pattern.monthlyGrowthRate,
-        queriesPerActiveUser: pattern.queriesPerActiveUser,
-        turnsPerQuery: pattern.turnsPerQuery,
-        description: pattern.description,
-        embeddingMultiplier: 1.5,
-        outputMultiplier: tokensPerQuery.outputMultiplier
-      },
-      tokensPerQuery
-    }
+      return {
+        ...prev,
+        selectedTemplate: newTemplate,
+        documents: newDocuments,
+        avgDocumentLength: DEFAULT_DOC_LENGTHS,
+        avgImageCount: prev.avgImageCount,
+        avgImageSize: prev.avgImageSize
+      };
+    });
   }
 
-  // 修改计算成本的函数
-  const calculateCost = (
-    initialUsage: CostCalculationInput,
-    monthlyUsage: CostCalculationInput
-  ): CostCalculationResult => {
+  // 添加团队规模变更处理函数
+  const handleTeamSizeChange = (newTeamSize: { total: number; activeUsers: number }) => {
+    const pattern = INDUSTRY_PATTERNS[initialDimensions.selectedTemplate];
+    const sizePattern = pattern.sizePatterns.small;
+    
+    setInitialDimensions(prev => {
+      const newDocuments = calculateDocumentCounts(
+        newTeamSize.total,
+        sizePattern.documentsPerUser
+      );
+
+      return {
+        ...prev,
+        teamSize: newTeamSize,
+        documents: newDocuments,
+        avgImageCount: prev.avgImageCount,
+        avgImageSize: prev.avgImageSize
+      };
+    });
+  }
+
+  // 添加文���数量计算函数
+  const calculateDocumentCounts = (
+    teamSize: number,
+    documentsPerUser: Record<string, number>
+  ): {
+    text: string;
+    excel: string;
+    ppt: string;
+    pdf: string;
+    word: string;
+    email: string;
+    image: string;
+  } => {
+    const result = {} as Record<string, string>;
+    Object.entries(documentsPerUser).forEach(([type, perUser]) => {
+      result[type] = String(Math.round(perUser * teamSize));
+    });
+    return result as {
+      text: string;
+      excel: string;
+      ppt: string;
+      pdf: string;
+      word: string;
+      email: string;
+      image: string;
+    };
+  }
+
+  // 计算处理函数
+  const handleCalculate = () => {
+    // 获取选中的模型
     const selectedEmbeddingModel = models.find(m => m.id === selectedEmbeddingModelId);
     const selectedChatModel = models.find(m => m.id === selectedChatModelId);
 
     if (!selectedEmbeddingModel || !selectedChatModel) {
-      throw new Error('Selected models not found');
+      console.error('Selected models not found');
+      return;
     }
 
-    const embeddingPrice = Number(selectedEmbeddingModel.inputPrice);
-    const chatInputPrice = Number(selectedChatModel.inputPrice);
-    const chatOutputPrice = Number(selectedChatModel.outputPrice || selectedChatModel.inputPrice);
-
-    return {
-      initial: {
-        embedding: (initialUsage.embedding / 1000000) * embeddingPrice,
-        total: (initialUsage.embedding / 1000000) * embeddingPrice
-      },
-      monthly: {
-        embedding: (monthlyUsage.embedding / 1000000) * embeddingPrice,
-        chatInput: ((monthlyUsage.chatInput || 0) / 1000000) * chatInputPrice,
-        chatOutput: ((monthlyUsage.chatOutput || 0) / 1000000) * chatOutputPrice,
-        total: (
-          (monthlyUsage.embedding / 1000000) * embeddingPrice +
-          ((monthlyUsage.chatInput || 0) / 1000000) * chatInputPrice +
-          ((monthlyUsage.chatOutput || 0) / 1000000) * chatOutputPrice
-        )
+    const initial = calculateInitialUsage(initialDimensions);
+    const monthly = calculateMonthlyUsage(monthlyDimensions);
+    const costs = calculateCost(initial, monthly);
+    
+    setCalculationResult({
+      initialUsage: initial,
+      monthlyUsage: monthly,
+      costs: costs,
+      modelPrices: {
+        embedding: Number(selectedEmbeddingModel.inputPrice),
+        chatInput: Number(selectedChatModel.inputPrice),
+        chatOutput: Number(selectedChatModel.outputPrice || selectedChatModel.inputPrice)
       }
-    };
+    });
+
+    // 计算基础价格
+    const price = calculateBasicPrice(
+      initialDimensions.teamSize.total,
+      monthlyPattern.queriesPerActiveUser * initialDimensions.teamSize.activeUsers * 30,
+      0, // 暂时设置为0或者添加向量存储计算
+      'MB'
+    );
+    
+    setBasicPrice(price);
   };
 
-  // 渲染 Token 倍率配置部分
+  // useEffect 移到这里
+  useEffect(() => {
+    const template = initialDimensions.selectedTemplate
+    const pattern = INDUSTRY_PATTERNS[template]
+    if (pattern) {
+      setMonthlyPattern({
+        monthlyGrowthRate: pattern.monthlyGrowthRate,
+        queriesPerActiveUser: pattern.queriesPerActiveUser,
+        turnsPerQuery: pattern.turnsPerQuery
+      })
+    }
+  }, [initialDimensions.selectedTemplate])
+
+  // localStorage 相关的 useEffect
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.MODELS, JSON.stringify(models))
+  }, [models])
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.SELECTED_CHAT, selectedChatModelId)
+  }, [selectedChatModelId])
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.SELECTED_EMBEDDING, selectedEmbeddingModelId)
+  }, [selectedEmbeddingModelId])
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.TOKEN_MULTIPLIERS, JSON.stringify(tokenMultipliers))
+  }, [tokenMultipliers])
+
+  // 将 renderTokenMultipliers 移到组件内部
   const renderTokenMultipliers = () => {
     const labels: Record<string, string> = {
       text: '纯文本倍率',
@@ -730,14 +727,14 @@ export function TokenEstimator() {
       ppt: 'PPT 倍率',
       pdf: 'PDF 倍率',
       word: 'Word 倍率',
-      email: '邮件倍率',
+      email: '件倍率',
       image: '图倍率',
       audio: '音频倍率',
       video: '视频倍率'
     }
 
     const descriptions: Record<string, string> = {
-      text: '基准倍率 (tokens/字符)',
+      text: '准倍率 (tokens/字符)',
       excel: '表格结构处理倍率',
       ppt: '布局和图片处理倍率',
       pdf: '格式处理倍率',
@@ -800,115 +797,130 @@ export function TokenEstimator() {
     )
   }
 
-  // 监听模板��企业规模变化，更新使用模式
-  useEffect(() => {
-    const template = initialDimensions.selectedTemplate
-    const pattern = INDUSTRY_PATTERNS[template]
-    if (pattern) {
-      setMonthlyPattern({
+  // 添加 handleModelsChange 函数
+  const handleModelsChange = (newModels: ModelPrice[]) => {
+    setModels(newModels)
+    
+    // 如果删除了当前选中的模型，选择同类型的第一个模型
+    const embeddingModels = newModels.filter(m => m.type === 'embedding')
+    const chatModels = newModels.filter(m => m.type === 'chat')
+
+    if (!newModels.find(m => m.id === selectedEmbeddingModelId) && embeddingModels.length > 0) {
+      setSelectedEmbeddingModelId(embeddingModels[0].id)
+    }
+
+    if (!newModels.find(m => m.id === selectedChatModelId) && chatModels.length > 0) {
+      setSelectedChatModelId(chatModels[0].id)
+    }
+  }
+
+  // 添加月度使用量计算函数
+  const calculateMonthlyUsage = (dimensions: {
+    documents: Record<string, string | number>;
+    avgDocumentLength: Record<string, string | number>;
+    dailyQueries?: string | number;
+    conversationTurns?: string | number;
+  }): {
+    embedding: number;
+    chatInput: number;
+    chatOutput: number;
+    pattern: {
+      monthlyGrowthRate: number;
+      queriesPerActiveUser: number;
+      turnsPerQuery: number;
+    };
+  } => {
+    const selectedTemplate = initialDimensions.selectedTemplate
+    const pattern = INDUSTRY_PATTERNS[selectedTemplate]
+
+    let monthlyEmbeddingTokens = 0
+    let monthlyChatInputTokens = 0
+    let monthlyChatOutputTokens = 0
+
+    // 计算新增文档的向量化
+    Object.entries(initialDimensions.documents).forEach(([docType, count]) => {
+      if (!count) return
+      const numericCount = Number(count)
+      const length = Number(initialDimensions.avgDocumentLength[docType as keyof typeof initialDimensions.avgDocumentLength]) || 0
+      const multiplier = tokenMultipliers[docType as keyof typeof tokenMultipliers]
+      const growthRate = pattern.monthlyGrowthRate
+      const monthlyNewCount = Math.round(numericCount * growthRate)
+      const tokens = monthlyNewCount * length * multiplier
+      monthlyEmbeddingTokens += tokens
+    })
+
+    // 计算对话 token
+    const activeUsers = initialDimensions.teamSize?.activeUsers || 0
+    const queriesPerUser = pattern.queriesPerActiveUser
+    const turnsPerQuery = pattern.turnsPerQuery
+    const monthlyQueries = activeUsers * queriesPerUser * 30
+
+    const tokensPerQuery = {
+      input: 200,    // 用户输入的平均token数
+      context: 2000, // 上下文的平均token数
+      systemPrompt: 300, // 系统提示的token数
+      outputMultiplier: 0.7 // 输出token与输入token的比例
+    }
+
+    const tokensPerConversation = 
+      (tokensPerQuery.input + tokensPerQuery.context + tokensPerQuery.systemPrompt) * 
+      turnsPerQuery
+
+    monthlyChatInputTokens = monthlyQueries * tokensPerConversation
+    monthlyChatOutputTokens = monthlyChatInputTokens * tokensPerQuery.outputMultiplier
+
+    return {
+      embedding: monthlyEmbeddingTokens,
+      chatInput: monthlyChatInputTokens,
+      chatOutput: monthlyChatOutputTokens,
+      pattern: {
         monthlyGrowthRate: pattern.monthlyGrowthRate,
         queriesPerActiveUser: pattern.queriesPerActiveUser,
         turnsPerQuery: pattern.turnsPerQuery
-      })
+      }
     }
-  }, [initialDimensions.selectedTemplate])
+  }
 
-  // 修改计算结果状态的类型
-  const [calculationResult, setCalculationResult] = useState<CalculationResult | null>(null);
-
-  // 在 TokenEstimator 组件中添加价格计算结果状态
-  const [basicPrice, setBasicPrice] = useState<{
-    userCost: number;
-    messageCost: number;
-    storageCost: number;
-    total: number;
-  } | null>(null);
-
-  // 计函数
-  const handleCalculate = () => {
-    // 获取选中的模型
+  // 添加成本计算函数
+  const calculateCost = (
+    initialUsage: CostCalculationInput,
+    monthlyUsage: CostCalculationInput
+  ): CostCalculationResult => {
     const selectedEmbeddingModel = models.find(m => m.id === selectedEmbeddingModelId);
     const selectedChatModel = models.find(m => m.id === selectedChatModelId);
 
     if (!selectedEmbeddingModel || !selectedChatModel) {
-      console.error('Selected models not found');
-      return;
+      throw new Error('Selected models not found');
     }
 
-    const initial = calculateInitialUsage(initialDimensions);
-    const monthly = calculateMonthlyUsage(monthlyDimensions);
-    const costs = calculateCost(initial, monthly);
-    
-    setCalculationResult({
-      initialUsage: initial,
-      monthlyUsage: monthly,
-      costs: costs,
-      modelPrices: {
-        embedding: selectedEmbeddingModel.inputPrice,
-        chatInput: selectedChatModel.inputPrice,
-        chatOutput: selectedChatModel.outputPrice || selectedChatModel.inputPrice
-      }
-    });
+    const embeddingPrice = Number(selectedEmbeddingModel.inputPrice);
+    const chatInputPrice = Number(selectedChatModel.inputPrice);
+    const chatOutputPrice = Number(selectedChatModel.outputPrice || selectedChatModel.inputPrice);
 
-    // 计算基础价格
-    const price = calculateBasicPrice(
-      initialDimensions.teamSize.total,
-      monthlyPattern.queriesPerActiveUser * initialDimensions.teamSize.activeUsers * 30, // 月度消息数
-      initialDimensions.vectorStorage,
-      'MB'
-    );
-    
-    setBasicPrice(price);
+    return {
+      initial: {
+        embedding: (initialUsage.embedding / 1000000) * embeddingPrice,
+        total: (initialUsage.embedding / 1000000) * embeddingPrice
+      },
+      monthly: {
+        embedding: (monthlyUsage.embedding / 1000000) * embeddingPrice,
+        chatInput: ((monthlyUsage.chatInput || 0) / 1000000) * chatInputPrice,
+        chatOutput: ((monthlyUsage.chatOutput || 0) / 1000000) * chatOutputPrice,
+        total: (
+          (monthlyUsage.embedding / 1000000) * embeddingPrice +
+          ((monthlyUsage.chatInput || 0) / 1000000) * chatInputPrice +
+          ((monthlyUsage.chatOutput || 0) / 1000000) * chatOutputPrice
+        )
+      }
+    };
   };
 
-  // 修改计文档数量的函数
-  const calculateDocumentCounts = (
-    teamSize: number,
-    documentsPerUser: Record<string, number>
-  ) => {
-    return Object.entries(documentsPerUser).reduce((acc, [type, perUser]) => {
-      acc[type] = String(Math.round(perUser * teamSize))
-      return acc
-    }, {} as Record<string, string>)
-  }
-
-  // 修改模板变更处理函数
-  const handleTemplateChange = (newTemplate: keyof typeof INDUSTRY_PATTERNS) => {
-    const pattern = INDUSTRY_PATTERNS[newTemplate]
-    const sizePattern = pattern.sizePatterns.small // 使用 small 作为基准
-    
-    setInitialDimensions(prev => {
-      const newDocuments = calculateDocumentCounts(
-        prev.teamSize.total,
-        sizePattern.documentsPerUser
-      )
-
-      return {
-        ...prev,
-        selectedTemplate: newTemplate,
-        documents: newDocuments,
-        avgDocumentLength: DEFAULT_DOC_LENGTHS
-      }
-    })
-  }
-
-  // 修改团队规模变更处理函数
-  const handleTeamSizeChange = (newTeamSize: { total: number; activeUsers: number }) => {
-    const pattern = INDUSTRY_PATTERNS[initialDimensions.selectedTemplate]
-    const sizePattern = pattern.sizePatterns.small
-    
-    setInitialDimensions(prev => {
-      const newDocuments = calculateDocumentCounts(
-        newTeamSize.total,
-        sizePattern.documentsPerUser
-      )
-
-      return {
-        ...prev,
-        teamSize: newTeamSize,
-        documents: newDocuments
-      }
-    })
+  // 添加 handlePatternChange 函数
+  const handlePatternChange = (updates: Partial<typeof monthlyPattern>) => {
+    setMonthlyPattern(prev => ({
+      ...prev,
+      ...updates
+    }))
   }
 
   return (
@@ -1052,7 +1064,7 @@ export function TokenEstimator() {
         <h5 className="text-sm font-medium text-gray-900 mb-2">成本构成说明</h5>
         <div className="space-y-2 text-sm text-gray-600">
           <p>• 向量化成本：每月新增文档的向量化费用（月增长率 × 初始文档量）</p>
-          <p>• 对话输入成本：活跃用户 × 日均查询次数 × 30天 × 每次查询token数</p>
+          <p>• 对话输入成本：活跃用户 × 日查询次数 × 30天 × 每次查询token数</p>
           <p>• 对话输出成本：对话输入token × 输出比例（默认0.7）</p>
         </div>
       </div>
@@ -1091,62 +1103,6 @@ export function TokenEstimator() {
           teamSize={initialDimensions.teamSize}
           modelPrices={calculationResult.modelPrices}
         />
-      )}
-
-      {calculationResult && basicPrice && (
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-6">
-            基础服务费用
-          </h3>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm font-medium text-gray-900">用户许可</p>
-                <p className="text-xs text-gray-500">
-                  {initialDimensions.teamSize.total} 用户 × ${BASE_PRICING.userPrice}/用户
-                </p>
-              </div>
-              <p className="text-lg font-medium text-gray-900">
-                ${basicPrice.userCost}
-              </p>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm font-medium text-gray-900">消息额度</p>
-                <p className="text-xs text-gray-500">
-                  {Math.ceil(monthlyPattern.queriesPerActiveUser * initialDimensions.teamSize.activeUsers * 30 / BASE_PRICING.messageUnit)} 
-                  × ${BASE_PRICING.messagePrice}/{BASE_PRICING.messageUnit}条
-                </p>
-              </div>
-              <p className="text-lg font-medium text-gray-900">
-                ${basicPrice.messageCost}
-              </p>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm font-medium text-gray-900">向量存储</p>
-                <p className="text-xs text-gray-500">
-                  {Math.ceil(initialDimensions.vectorStorage / BASE_PRICING.storageUnit)} 
-                  × ${BASE_PRICING.storagePrice}/{BASE_PRICING.storageUnit}MB
-                </p>
-              </div>
-              <p className="text-lg font-medium text-gray-900">
-                ${basicPrice.storageCost}
-              </p>
-            </div>
-            
-            <div className="pt-4 border-t border-gray-200">
-              <div className="flex justify-between items-center">
-                <p className="text-base font-medium text-gray-900">基础服务月费</p>
-                <p className="text-2xl font-bold text-primary-600">
-                  ${basicPrice.total}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   )
