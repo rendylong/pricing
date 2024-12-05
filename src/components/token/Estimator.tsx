@@ -316,49 +316,23 @@ const DEFAULT_DOC_LENGTHS = {
   email: '800'
 }
 
-// 添加基础价格配置
-const BASE_PRICING = {
-  userPrice: 20,          // 每用户月费 $20
-  messageUnit: 1000,      // 消息计费单位
-  messagePrice: 10,       // 每1000条消息 $10
-  storageUnit: 100,       // 存储计费单位(MB)
-  storagePrice: 15,       // 每100MB存储 $15
-  minUsers: 3,            // 最少用户
-  minMessages: 5000,      // 最少消息数
-  minStorage: 200,        // 最少存储空间(MB)
-} as const;
+// 添加缺失的类型定义
+interface CostCalculationInput {
+  embedding: number;
+  chatInput?: number;
+  chatOutput?: number;
+}
 
-// 定义计算结果的类型
-interface CalculationResult {
-  initialUsage: {
-    embedding: number;
-    documents: Record<string, string>;
-    avgDocumentLength: Record<string, string>;
-    multipliers: Record<string, number>;
+interface CostCalculationResult {
+  initial: { 
+    embedding: number; 
+    total: number;
   };
-  monthlyUsage: {
+  monthly: {
     embedding: number;
     chatInput: number;
     chatOutput: number;
-    pattern: {
-      monthlyGrowthRate: number;
-      queriesPerActiveUser: number;
-      turnsPerQuery: number;
-    };
-  };
-  costs: {
-    initial: { embedding: number; total: number };
-    monthly: {
-      embedding: number;
-      chatInput: number;
-      chatOutput: number;
-      total: number;
-    };
-  };
-  modelPrices: {
-    embedding: number;
-    chatInput: number;
-    chatOutput: number;
+    total: number;
   };
 }
 
@@ -471,25 +445,32 @@ export function TokenEstimator() {
       total: number;
       activeUsers: number;
     };
-  }) => {
+  }): {
+    embedding: number;
+    documents: Record<string, string>;
+    avgDocumentLength: Record<string, string>;
+    multipliers: Record<string, number>;
+  } => {
     let totalEmbeddingTokens = 0
 
-    // 转换输入值为数字
+    // 转换输入值为数字并计算
     const convertedDocuments = Object.entries(dimensions.documents).reduce((acc, [key, value]) => {
-      acc[key] = Number(value) || 0
+      const numValue = Number(value) || 0
+      acc[key] = String(numValue) // 转换回字符串以匹配类型
       return acc
-    }, {} as Record<string, number>)
+    }, {} as Record<string, string>)
 
     const convertedLengths = Object.entries(dimensions.avgDocumentLength).reduce((acc, [key, value]) => {
-      acc[key] = Number(value) || 0
+      const numValue = Number(value) || 0
+      acc[key] = String(numValue) // 转换回字符串以匹配类型
       return acc
-    }, {} as Record<string, number>)
+    }, {} as Record<string, string>)
 
-    // 计算文档 token
+    // 计算总 token
     Object.entries(convertedDocuments).forEach(([docType, count]) => {
-      const length = convertedLengths[docType] || 0
+      const length = Number(convertedLengths[docType]) || 0
       const multiplier = tokenMultipliers[docType as keyof typeof tokenMultipliers]
-      const tokens = count * length * multiplier
+      const tokens = Number(count) * length * multiplier
       totalEmbeddingTokens += tokens
     })
 
@@ -501,7 +482,7 @@ export function TokenEstimator() {
     }
   }
 
-  // 添加模板变更处理���数
+  // 添加模板变更处理数
   const handleTemplateChange = (newTemplate: keyof typeof INDUSTRY_PATTERNS) => {
     const pattern = INDUSTRY_PATTERNS[newTemplate];
     const sizePattern = pattern.sizePatterns.small;
@@ -574,7 +555,6 @@ export function TokenEstimator() {
 
   // 计算处理函数
   const handleCalculate = () => {
-    // 获取选中的模型
     const selectedEmbeddingModel = models.find(m => m.id === selectedEmbeddingModelId);
     const selectedChatModel = models.find(m => m.id === selectedChatModelId);
 
@@ -584,7 +564,7 @@ export function TokenEstimator() {
     }
 
     const initial = calculateInitialUsage(initialDimensions);
-    const monthly = calculateMonthlyUsage(monthlyDimensions);
+    const monthly = calculateMonthlyUsage();
     const costs = calculateCost(initial, monthly);
     
     setCalculationResult({
@@ -635,7 +615,7 @@ export function TokenEstimator() {
       text: '纯文本倍率',
       excel: 'Excel 倍率',
       ppt: 'PPT 倍率',
-      pdf: 'PDF ��率',
+      pdf: 'PDF 率',
       word: 'Word 倍率',
       email: '件倍率',
       image: '图倍率',
