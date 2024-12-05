@@ -103,22 +103,45 @@ const INDUSTRY_PATTERNS: Record<string, IndustryPattern> = {
         queriesPerActiveUser: 4,
         turnsPerQuery: 5,
         teamSize: { total: 800, activeRatio: 0.7 },
-        // 金融行业特点：Excel和PDF占比高，反映数据分析和合规需求
         documentsPerUser: {
-          excel: 15,    // 报表和分析文件
-          pdf: 12,      // 合规文件和产品说明
-          word: 8,      // 内部文档
-          text: 5,      // 普通文本
-          ppt: 3,       // 演示文稿
-          email: 20,    // 邮件往来
-          image: 2      // 图片较少
+          excel: 15,
+          pdf: 12,
+          word: 8,
+          text: 5,
+          ppt: 3,
+          email: 20,
+          image: 2
         }
       },
-      medium: {
-        // ... 类似配置，数值按规模调整
+      medium: { 
+        monthlyGrowthRate: 0.15,
+        queriesPerActiveUser: 5,
+        turnsPerQuery: 6,
+        teamSize: { total: 2000, activeRatio: 0.7 },
+        documentsPerUser: {
+          excel: 18,
+          pdf: 15,
+          word: 10,
+          text: 6,
+          ppt: 4,
+          email: 25,
+          image: 3
+        }
       },
       large: {
-        // ... 类似配置，数值按规模调整
+        monthlyGrowthRate: 0.18,
+        queriesPerActiveUser: 6,
+        turnsPerQuery: 7,
+        teamSize: { total: 5000, activeRatio: 0.7 },
+        documentsPerUser: {
+          excel: 20,
+          pdf: 18,
+          word: 12,
+          text: 8,
+          ppt: 5,
+          email: 30,
+          image: 4
+        }
       }
     }
   },
@@ -133,15 +156,44 @@ const INDUSTRY_PATTERNS: Record<string, IndustryPattern> = {
         queriesPerActiveUser: 6,
         turnsPerQuery: 5,
         teamSize: { total: 500, activeRatio: 0.9 },
-        // 科技公司特点：文本文件和PPT占比高，反映技术文档和产品演示求
         documentsPerUser: {
-          text: 20,     // 技术文档
-          ppt: 10,      // 产品演示
-          pdf: 5,       // 规范文档
-          word: 5,      // 一般文档
-          excel: 3,     // 数据分析
-          email: 25,    // 邮件沟通
-          image: 8      // 产品设计图
+          text: 20,
+          ppt: 10,
+          pdf: 5,
+          word: 5,
+          excel: 3,
+          email: 25,
+          image: 8
+        }
+      },
+      medium: {
+        monthlyGrowthRate: 0.18,
+        queriesPerActiveUser: 7,
+        turnsPerQuery: 6,
+        teamSize: { total: 1000, activeRatio: 0.9 },
+        documentsPerUser: {
+          text: 25,
+          ppt: 12,
+          pdf: 6,
+          word: 6,
+          excel: 4,
+          email: 30,
+          image: 10
+        }
+      },
+      large: {
+        monthlyGrowthRate: 0.20,
+        queriesPerActiveUser: 8,
+        turnsPerQuery: 7,
+        teamSize: { total: 3000, activeRatio: 0.9 },
+        documentsPerUser: {
+          text: 30,
+          ppt: 15,
+          pdf: 8,
+          word: 8,
+          excel: 5,
+          email: 35,
+          image: 12
         }
       }
     }
@@ -171,7 +223,7 @@ const INDUSTRY_PATTERNS: Record<string, IndustryPattern> = {
     }
   },
   k12: {
-    description: '中小学校的知识库以教案、试题���学生作业为主。Word和PPT占比较高，反映了教学资料特点。人均文档量适中。',
+    description: '中小学校的知识库以教案、试题学生作业为主。Word和PPT占比较高，反映了教学资料特点。人均文档量适中。',
     monthlyGrowthRate: 0.05,
     queriesPerActiveUser: 3,
     turnsPerQuery: 4,
@@ -621,7 +673,7 @@ export function TokenEstimator() {
       pdf: 'PDF 倍率',
       word: 'Word 倍率',
       email: '邮件倍率',
-      image: '图���倍率',
+      image: '图倍率',
       audio: '音频倍率',
       video: '视频倍率'
     }
@@ -640,7 +692,7 @@ export function TokenEstimator() {
 
     const units: Record<string, string> = {
       text: 'tokens/字符',
-      excel: 'tokens/字��',
+      excel: 'tokens/字',
       ppt: 'tokens/字符',
       pdf: 'tokens/字符',
       word: 'tokens/字符',
