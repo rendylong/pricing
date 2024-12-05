@@ -349,6 +349,32 @@ const DEFAULT_TOKEN_MULTIPLIERS = {
   video: 800
 };
 
+// 添加 CalculationResult 接口定义
+interface CalculationResult {
+  initialUsage: {
+    embedding: number;
+    documents: Record<string, string>;
+    avgDocumentLength: Record<string, string>;
+    multipliers: Record<string, number>;
+  };
+  monthlyUsage: {
+    embedding: number;
+    chatInput: number;
+    chatOutput: number;
+    pattern: {
+      monthlyGrowthRate: number;
+      queriesPerActiveUser: number;
+      turnsPerQuery: number;
+    };
+  };
+  costs: CostCalculationResult;
+  modelPrices: {
+    embedding: number;
+    chatInput: number;
+    chatOutput: number;
+  };
+}
+
 export function TokenEstimator() {
   // 从 localStorage 初始化状
   const [models, setModels] = useState<ModelPrice[]>(() => {
@@ -411,31 +437,6 @@ export function TokenEstimator() {
 
   // 添加计算结果状态
   const [calculationResult, setCalculationResult] = useState<CalculationResult | null>(null);
-
-  // 添加月度使用量维度状态
-  const [monthlyDimensions] = useState({
-    documents: {
-      text: '',
-      excel: '',
-      ppt: '',
-      pdf: '',
-      word: '',
-      email: '',
-      image: ''
-    },
-    avgDocumentLength: {
-      text: '',
-      excel: '',
-      ppt: '',
-      pdf: '',
-      word: '',
-      email: ''
-    },
-    avgImageCount: '',
-    avgImageSize: '',
-    dailyQueries: '',
-    conversationTurns: ''
-  });
 
   // 将计算函数移到组件内部并实现完整功能
   const calculateInitialUsage = (dimensions: {
