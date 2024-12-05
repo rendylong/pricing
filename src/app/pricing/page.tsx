@@ -1,6 +1,6 @@
 'use client'
 
-import { TokenEstimator } from '@/components/token/Estimator'
+import { PricingCalculator } from '@/components/pricing/Calculator'
 import { Header } from '@/components/layout/Header'
 
 export default function Page() {
@@ -12,14 +12,14 @@ export default function Page() {
           <div className="flex justify-between items-center mb-12">
             <div className="text-center flex-1">
               <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                Token 使用量预估
+                价格计算器
               </h1>
               <p className="text-lg text-gray-600">
-                估算您的 Token 使用量和成本
+                根据您的需求计算价格
               </p>
             </div>
           </div>
-          <TokenEstimator />
+          <PricingCalculator />
         </div>
       </main>
     </div>

@@ -1,186 +1,196 @@
 'use client'
 
-import { Feature } from './types'
-
-// 添加基础价格配置
-const BASE_PRICING = {
-  userPrice: 20,          // 每用户月费 $20
-  messageUnit: 1000,      // 消息计费单位
-  messagePrice: 10,       // 每1000条消息 $10
-  storageUnit: 100,       // 存储计费单位(MB)
-  storagePrice: 15,       // 每100MB存储 $15
-  minUsers: 3,            // 最少用户数
-  minMessages: 5000,      // 最少消息数
-  minStorage: 200,        // 最少存储空间(MB)
-} as const;
-
-// 添加类型定义
 interface PriceBreakdownProps {
   pricing: {
-    users: number;
-    messageCredits: number;
-    vectorStorage: number;
-    storageUnit: 'MB' | 'GB';
-    selectedFeatures: string[];
-    billingCycle: 'monthly' | 'yearly';
-    currency: string;
-    yearlyDiscountRate: number;
-    yearlyDiscountEnabled: boolean;
+    users: number
+    messageCredits: number
+    vectorStorage: number
+    storageUnit: 'MB' | 'GB'
+    selectedFeatures: string[]
+    billingCycle: 'monthly' | 'yearly'
+    yearlyDiscountRate: number
+    yearlyDiscountEnabled: boolean
     basePricing: {
-      userPrice: number;
-      messagePrice: number;
-      storagePrice: number;
-    };
-  };
-  features: Feature[];
-  className?: string;
+      userPrice: number
+      messagePrice: number
+      storagePrice: number
+    }
+  }
+  features: Array<{
+    id: string
+    name: string
+    price: number
+    billingType: 'monthly' | 'onetime'
+  }>
+  className?: string
 }
 
-export function PriceBreakdown({ pricing, features, className }: PriceBreakdownProps) {
-  // 使用传入的自定义价格
-  const calculateBasicCosts = () => {
-    // 确保不低于最小值
-    const actualUsers = Math.max(pricing.users, BASE_PRICING.minUsers);
-    const actualMessages = Math.max(pricing.messageCredits, BASE_PRICING.minMessages);
-    
-    // 转换存储单位到MB
-    const storageInMB = pricing.storageUnit === 'GB' ? pricing.vectorStorage * 1024 : pricing.vectorStorage;
-    const actualStorage = Math.max(storageInMB, BASE_PRICING.minStorage);
+export function PriceBreakdown({ pricing, features, className = '' }: PriceBreakdownProps) {
+  const {
+    users,
+    messageCredits,
+    vectorStorage,
+    storageUnit,
+    selectedFeatures,
+    billingCycle,
+    yearlyDiscountRate,
+    yearlyDiscountEnabled,
+    basePricing
+  } = pricing
 
-    // 使用自定义价格计算
-    const userCost = actualUsers * pricing.basePricing.userPrice;
-    const messageUnits = Math.ceil(actualMessages / BASE_PRICING.messageUnit);
-    const messageCost = messageUnits * pricing.basePricing.messagePrice;
-    const storageUnits = Math.ceil(actualStorage / BASE_PRICING.storageUnit);
-    const storageCost = storageUnits * pricing.basePricing.storagePrice;
+  // 计算基础服务费用
+  const calculateBasicPrice = () => {
+    const userCost = users * basePricing.userPrice
+    const messageCost = (messageCredits / 1000) * basePricing.messagePrice
+    const storageMB = storageUnit === 'GB' ? vectorStorage * 1024 : vectorStorage
+    const storageCost = Math.ceil(storageMB / 100) * basePricing.storagePrice
+    return userCost + messageCost + storageCost
+  }
 
-    return {
-      userCost,
-      messageCost,
-      storageCost
-    };
-  };
-
-  // 计算附加功能费用
-  const calculateFeatureCosts = () => {
-    return pricing.selectedFeatures.reduce((total, featureId) => {
-      const feature = features.find(f => f.id === featureId);
-      if (!feature) return total;
-      
-      if (feature.billingType === 'monthly') {
-        return total + feature.price;
+  // 计算月度附加功能费用
+  const calculateMonthlyFeaturePrice = () => {
+    return selectedFeatures.reduce((total, featureId) => {
+      const feature = features.find(f => f.id === featureId)
+      if (feature && feature.billingType === 'monthly') {
+        return total + feature.price
       }
-      // 一次性费用按12个月分摊
-      return total + (feature.price / 12);
-    }, 0);
-  };
+      return total
+    }, 0)
+  }
 
-  const basicCosts = calculateBasicCosts();
-  const featureCosts = calculateFeatureCosts();
-  
+  // 计算一次性费用
+  const calculateOnetimeFeaturePrice = () => {
+    return selectedFeatures.reduce((total, featureId) => {
+      const feature = features.find(f => f.id === featureId)
+      if (feature && feature.billingType === 'onetime') {
+        return total + feature.price
+      }
+      return total
+    }, 0)
+  }
+
   // 计算月度总费用
-  const monthlyTotal = basicCosts.userCost + basicCosts.messageCost + basicCosts.storageCost + featureCosts;
-  
-  // 如果是年付，应用折扣
-  const finalTotal = pricing.billingCycle === 'yearly' && pricing.yearlyDiscountEnabled
-    ? monthlyTotal * 12 * (1 - pricing.yearlyDiscountRate)
-    : monthlyTotal * (pricing.billingCycle === 'yearly' ? 12 : 1);
+  const calculateMonthlyTotal = () => {
+    const basicPrice = calculateBasicPrice()
+    const monthlyFeaturePrice = calculateMonthlyFeaturePrice()
+    const total = basicPrice + monthlyFeaturePrice
+
+    if (billingCycle === 'yearly' && yearlyDiscountEnabled) {
+      return total * (1 - yearlyDiscountRate)
+    }
+    return total
+  }
+
+  const monthlyTotal = calculateMonthlyTotal()
+  const yearlyTotal = monthlyTotal * (billingCycle === 'yearly' ? 12 : 1)
+  const onetimeTotal = calculateOnetimeFeaturePrice()
 
   return (
     <div className={className}>
-      <h3 className="text-lg font-semibold text-gray-900 mb-6">
-        价格明细
-      </h3>
+      <h3 className="text-lg font-semibold text-gray-900 mb-6">价格明细</h3>
       
-      {/* 基础服务费用 */}
-      <div className="space-y-4 mb-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <p className="text-sm font-medium text-gray-900">用户许可</p>
-            <p className="text-xs text-gray-500">
-              {pricing.users} 用户 × ${pricing.basePricing.userPrice}/用户
-            </p>
+      <div className="space-y-4">
+        {/* 基础服务费用 */}
+        <div className="pb-4 border-b border-gray-200">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm font-medium text-gray-700">基础服务费用</span>
+            <span className="text-sm text-gray-900">
+              ${calculateBasicPrice().toFixed(2)}/月
+            </span>
           </div>
-          <p className="text-lg font-medium text-gray-900">
-            ${basicCosts.userCost}
-          </p>
-        </div>
-
-        <div className="flex justify-between items-center">
-          <div>
-            <p className="text-sm font-medium text-gray-900">消息额度</p>
-            <p className="text-xs text-gray-500">
-              {Math.ceil(pricing.messageCredits / BASE_PRICING.messageUnit)} 
-              × ${pricing.basePricing.messagePrice}/{BASE_PRICING.messageUnit}条
-            </p>
+          <div className="text-xs text-gray-500 space-y-1">
+            <div className="flex justify-between">
+              <span>• 用户许可 ({users} 用户)</span>
+              <span>${(users * basePricing.userPrice).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>• 消息额度 ({messageCredits.toLocaleString()} 条)</span>
+              <span>${((messageCredits / 1000) * basePricing.messagePrice).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>• 向量存储 ({vectorStorage} {storageUnit})</span>
+              <span>${(Math.ceil((storageUnit === 'GB' ? vectorStorage * 1024 : vectorStorage) / 100) * basePricing.storagePrice).toFixed(2)}</span>
+            </div>
           </div>
-          <p className="text-lg font-medium text-gray-900">
-            ${basicCosts.messageCost}
-          </p>
         </div>
 
-        <div className="flex justify-between items-center">
-          <div>
-            <p className="text-sm font-medium text-gray-900">存储空间</p>
-            <p className="text-xs text-gray-500">
-              {Math.ceil((pricing.storageUnit === 'GB' ? pricing.vectorStorage * 1024 : pricing.vectorStorage) / BASE_PRICING.storageUnit)} 
-              × ${pricing.basePricing.storagePrice}/{BASE_PRICING.storageUnit}MB
-            </p>
-          </div>
-          <p className="text-lg font-medium text-gray-900">
-            ${basicCosts.storageCost}
-          </p>
-        </div>
-      </div>
-
-      {/* 附加功能费用 */}
-      {pricing.selectedFeatures.length > 0 && (
-        <div className="space-y-3 mb-6 pt-4 border-t border-gray-200">
-          <h4 className="text-sm font-medium text-gray-900">附加功能</h4>
-          {pricing.selectedFeatures.map(featureId => {
-            const feature = features.find(f => f.id === featureId);
-            if (!feature) return null;
-            
-            return (
-              <div key={feature.id} className="flex justify-between items-center">
-                <div>
-                  <p className="text-sm text-gray-900">{feature.name}</p>
-                  {feature.billingType === 'onetime' && (
-                    <p className="text-xs text-gray-500">一次性费用按12个月分摊</p>
-                  )}
-                </div>
-                <p className="text-lg font-medium text-gray-900">
-                  ${feature.billingType === 'monthly' ? feature.price : Math.round(feature.price / 12)}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* 总计 */}
-      <div className="pt-4 border-t border-gray-200">
-        <div className="flex justify-between items-center mb-2">
-          <p className="text-sm font-medium text-gray-900">月度总费用</p>
-          <p className="text-lg font-medium text-gray-900">${monthlyTotal}</p>
-        </div>
-        
-        {pricing.billingCycle === 'yearly' && pricing.yearlyDiscountEnabled && (
-          <div className="flex justify-between items-center text-sm text-gray-600 mb-4">
-            <p>年付优惠 (-{(pricing.yearlyDiscountRate * 100).toFixed(0)}%)</p>
-            <p>-${(monthlyTotal * 12 * pricing.yearlyDiscountRate).toFixed(2)}</p>
+        {/* 月度附加功能费用 */}
+        {calculateMonthlyFeaturePrice() > 0 && (
+          <div className="pb-4 border-b border-gray-200">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium text-gray-700">月度附加功能</span>
+              <span className="text-sm text-gray-900">
+                ${calculateMonthlyFeaturePrice().toFixed(2)}/月
+              </span>
+            </div>
+            <div className="text-xs text-gray-500 space-y-1">
+              {selectedFeatures.map(featureId => {
+                const feature = features.find(f => f.id === featureId)
+                if (feature && feature.billingType === 'monthly') {
+                  return (
+                    <div key={feature.id} className="flex justify-between">
+                      <span>• {feature.name}</span>
+                      <span>${feature.price.toFixed(2)}</span>
+                    </div>
+                  )
+                }
+                return null
+              })}
+            </div>
           </div>
         )}
-        
-        {pricing.billingCycle === 'yearly' && (
-          <div className="flex justify-between items-center">
-            <p className="text-base font-medium text-gray-900">年付总额</p>
-            <p className="text-2xl font-bold text-primary-600">
-              ${finalTotal.toFixed(2)}
-            </p>
+
+        {/* 一次性费用 */}
+        {onetimeTotal > 0 && (
+          <div className="pb-4 border-b border-gray-200">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium text-gray-700">一次性费用</span>
+              <span className="text-sm text-gray-900">
+                ${onetimeTotal.toFixed(2)}
+              </span>
+            </div>
+            <div className="text-xs text-gray-500 space-y-1">
+              {selectedFeatures.map(featureId => {
+                const feature = features.find(f => f.id === featureId)
+                if (feature && feature.billingType === 'onetime') {
+                  return (
+                    <div key={feature.id} className="flex justify-between">
+                      <span>• {feature.name}</span>
+                      <span>${feature.price.toFixed(2)}</span>
+                    </div>
+                  )
+                }
+                return null
+              })}
+            </div>
           </div>
         )}
+
+        {/* 总计 */}
+        <div className="pt-4">
+          {/* 月付/年付金额 */}
+          <div className="flex justify-between items-center text-lg font-semibold text-gray-900">
+            <span>{billingCycle === 'yearly' ? '年度' : '月度'}费用</span>
+            <span>${yearlyTotal.toFixed(2)}</span>
+          </div>
+          
+          {/* 显示月均费用（如果是年付） */}
+          {billingCycle === 'yearly' && (
+            <div className="flex justify-between items-center mt-2 text-sm text-gray-500">
+              <span>月均费用</span>
+              <span>${(yearlyTotal / 12).toFixed(2)}/月</span>
+            </div>
+          )}
+
+          {/* 一次性费用总计 */}
+          {onetimeTotal > 0 && (
+            <div className="flex justify-between items-center mt-4 text-base font-medium text-gray-900">
+              <span>一次性费用总计</span>
+              <span>${onetimeTotal.toFixed(2)}</span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
-  );
+  )
 } 
