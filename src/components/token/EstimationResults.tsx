@@ -54,6 +54,20 @@ interface EstimationResultsProps {
   }
 }
 
+// 首先定义文档类型的类型
+type DocType = 'text' | 'excel' | 'ppt' | 'pdf' | 'word' | 'email' | 'image';
+
+// 然后定义文档类型名称映射
+const DOC_TYPE_NAMES: Record<DocType, string> = {
+  text: '纯文本',
+  excel: 'Excel',
+  ppt: 'PPT',
+  pdf: 'PDF',
+  word: 'Word',
+  email: '邮件',
+  image: '图片'
+} as const;
+
 export function EstimationResults({ initialUsage, monthlyUsage, costs, teamSize, modelPrices }: EstimationResultsProps) {
   const formatNumber = (num: number | string) => {
     const value = Number(num)
@@ -85,17 +99,6 @@ export function EstimationResults({ initialUsage, monthlyUsage, costs, teamSize,
     image: 300  // 图片按每百万像素计算
   } as const;
 
-  // 文档类型的中文名称
-  const DOC_TYPE_NAMES = {
-    text: '纯文本',
-    excel: 'Excel',
-    ppt: 'PPT',
-    pdf: 'PDF',
-    word: 'Word',
-    email: '邮件',
-    image: '图片'
-  } as const;
-
   // 添加计算单个文档类型的 token 数的函数
   const calculateDocumentTokens = (count: number, length: number, multiplier: number) => {
     return count * length * multiplier;
@@ -125,20 +128,22 @@ export function EstimationResults({ initialUsage, monthlyUsage, costs, teamSize,
             <h4 className="text-sm font-medium text-gray-900 mb-3">Token 计算明细</h4>
             <div className="space-y-2">
               {Object.entries(initialUsage.documents).map(([docType, count]) => {
-                if (!count) return null;
-                const length = initialUsage.avgDocumentLength[docType] || 0;
-                const multiplier = initialUsage.multipliers[docType];
-                const tokens = calculateDocumentTokens(Number(count), Number(length), multiplier);
+                const length = initialUsage.avgDocumentLength[docType as keyof typeof initialUsage.avgDocumentLength] || 0
+                const multiplier = initialUsage.multipliers[docType as keyof typeof initialUsage.multipliers]
+                const tokens = Number(count) * Number(length) * multiplier
+
+                if (!count || !tokens) return null
+
                 return (
                   <div key={docType} className="flex justify-between text-sm">
                     <span className="text-gray-600">
-                      {DOC_TYPE_NAMES[docType]}：{formatNumber(count)}份 × {formatNumber(length)}字符 × {multiplier}
+                      {DOC_TYPE_NAMES[docType as DocType]}：{formatNumber(count)}份 × {formatNumber(length)}字符 × {multiplier}
                     </span>
                     <span className="text-gray-900 font-medium">
                       {formatNumber(tokens)} tokens
                     </span>
                   </div>
-                );
+                )
               })}
               <div className="border-t pt-2 mt-2">
                 <div className="flex justify-between text-sm font-medium">
@@ -185,21 +190,23 @@ export function EstimationResults({ initialUsage, monthlyUsage, costs, teamSize,
                 月增长率：{(monthlyUsage.pattern.monthlyGrowthRate * 100).toFixed(1)}%
               </div>
               {Object.entries(initialUsage.documents).map(([docType, count]) => {
-                if (!count) return null;
-                const length = initialUsage.avgDocumentLength[docType] || 0;
-                const multiplier = DOC_MULTIPLIERS[docType];
-                const newCount = Math.round(count * monthlyUsage.pattern.monthlyGrowthRate);
-                const tokens = newCount * length * multiplier;
+                const length = initialUsage.avgDocumentLength[docType as keyof typeof initialUsage.avgDocumentLength] || 0
+                const multiplier = DOC_MULTIPLIERS[docType as keyof typeof DOC_MULTIPLIERS]
+                const newCount = Math.round(count * monthlyUsage.pattern.monthlyGrowthRate)
+                const tokens = newCount * length * multiplier
+
+                if (!count || !tokens) return null
+
                 return (
                   <div key={docType} className="flex justify-between text-sm">
                     <span className="text-gray-600">
-                      {DOC_TYPE_NAMES[docType]}新增：{formatNumber(newCount)}份 × {formatNumber(length)}字符 × {multiplier}
+                      {DOC_TYPE_NAMES[docType as DocType]}新增：{formatNumber(newCount)}份 × {formatNumber(length)}字符 × {multiplier}
                     </span>
                     <span className="text-gray-900 font-medium">
                       {formatNumber(tokens)} tokens
                     </span>
                   </div>
-                );
+                )
               })}
               <div className="border-t pt-2 mt-2">
                 <div className="flex justify-between text-sm font-medium">
