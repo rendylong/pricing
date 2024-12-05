@@ -1,35 +1,26 @@
 'use client'
 
 import { useState } from 'react'
-import { NumericInput } from '@/components/ui/NumericInput'
 import { Select } from '@/components/ui/Select'
 
-interface UsageDimensionsProps {
-  dimensions: {
-    documents: Record<string, string | number>
-    avgDocumentLength: Record<string, string | number>
-    avgImageCount?: string | number
-    avgImageSize?: string | number
-    avgAudioLength?: string | number
-    avgVideoLength?: string | number
-    teamSize?: {
-      total: number
-      activeUsers: number
-    }
-    industry?: string
-    dailyQueries?: string | number
-    conversationTurns?: string | number
-    selectedTemplate?: string
-  }
-  onChange: (dimensions: any) => void
-  type: 'initial' | 'monthly'
+interface Dimensions {
+  documents: Record<string, string>;
+  avgDocumentLength: Record<string, string>;
+  teamSize: {
+    total: number;
+    activeUsers: number;
+  };
+  selectedTemplate?: string;
+  [key: string]: unknown;
 }
 
-export function UsageDimensions({
-  dimensions,
-  onChange,
-  type
-}: UsageDimensionsProps) {
+interface UsageDimensionsProps {
+  dimensions: Dimensions;
+  onChange: (dimensions: Dimensions) => void;
+  type: 'initial' | 'monthly';
+}
+
+export function UsageDimensions({ dimensions, onChange, type }: UsageDimensionsProps) {
   const docTypes = {
     text: '纯文本文档',
     excel: 'Excel 文档',

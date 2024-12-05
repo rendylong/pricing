@@ -4,11 +4,7 @@ import { PricingCalculator } from '@/components/pricing/Calculator'
 import { Header } from '@/components/layout/Header'
 import Link from 'next/link'
 
-interface HomePageProps {
-  lang: string
-}
-
-export function HomePage({ lang }: HomePageProps) {
+export function HomePage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
