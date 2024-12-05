@@ -31,26 +31,6 @@ export function UsageDimensions({ dimensions, onChange, type }: UsageDimensionsP
     image: '图片文件'
   }
 
-  const handleDocumentChange = (type: string, value: number | '') => {
-    onChange({
-      ...dimensions,
-      documents: {
-        ...dimensions.documents,
-        [type]: value.toString()
-      }
-    })
-  }
-
-  const handleLengthChange = (type: string, value: number | '') => {
-    onChange({
-      ...dimensions,
-      avgDocumentLength: {
-        ...dimensions.avgDocumentLength,
-        [type]: value.toString()
-      }
-    })
-  }
-
   const calculateTokens = (type: keyof typeof docTypes) => {
     const count = Number(dimensions.documents[type]) || 0
     const length = Number(dimensions.avgDocumentLength[type]) || 0
