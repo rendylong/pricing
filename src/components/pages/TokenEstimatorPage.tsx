@@ -4,11 +4,7 @@ import { TokenEstimator } from '@/components/token/Estimator'
 import { Header } from '@/components/layout/Header'
 import Link from 'next/link'
 
-interface TokenEstimatorPageProps {
-  lang: string
-}
-
-export function TokenEstimatorPage({ lang }: TokenEstimatorPageProps) {
+export function TokenEstimatorPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -24,13 +20,13 @@ export function TokenEstimatorPage({ lang }: TokenEstimatorPageProps) {
               </p>
             </div>
             <Link 
-              href={`/${lang}`}
+              href="/"
               className="text-primary-600 hover:text-primary-700 font-medium"
             >
               价格计算器 →
             </Link>
           </div>
-          <TokenEstimator lang={lang} />
+          <TokenEstimator />
         </div>
       </main>
     </div>

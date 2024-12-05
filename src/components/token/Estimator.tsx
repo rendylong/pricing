@@ -133,7 +133,7 @@ const INDUSTRY_PATTERNS: Record<string, IndustryPattern> = {
         queriesPerActiveUser: 6,
         turnsPerQuery: 5,
         teamSize: { total: 500, activeRatio: 0.9 },
-        // 科技公司特点：文本文件和PPT占比高，反映技术文档和产品演示��求
+        // 科技公司特点：文本文件和PPT占比高，反映技术文档和产品演示求
         documentsPerUser: {
           text: 20,     // 技术文档
           ppt: 10,      // 产品演示
@@ -171,7 +171,7 @@ const INDUSTRY_PATTERNS: Record<string, IndustryPattern> = {
     }
   },
   k12: {
-    description: '中小学校的知识库以教案、试题和学生作业为主。Word和PPT占比较高，反映了教学资料��特点。人均文档量适中。',
+    description: '中小学校的知识库以教案、试题���学生作业为主。Word和PPT占比较高，反映了教学资料特点。人均文档量适中。',
     monthlyGrowthRate: 0.05,
     queriesPerActiveUser: 3,
     turnsPerQuery: 4,
@@ -218,7 +218,7 @@ const BASE_PRICING = {
   minStorage: 200,        // 最少存储空间(MB)
 } as const;
 
-// 添加��格计算函数
+// 添加格计算函数
 const calculateBasicPrice = (
   users: number,
   messages: number,
@@ -621,7 +621,7 @@ export function TokenEstimator() {
       pdf: 'PDF 倍率',
       word: 'Word 倍率',
       email: '邮件倍率',
-      image: '图片倍率',
+      image: '图���倍率',
       audio: '音频倍率',
       video: '视频倍率'
     }
@@ -640,7 +640,7 @@ export function TokenEstimator() {
 
     const units: Record<string, string> = {
       text: 'tokens/字符',
-      excel: 'tokens/字符',
+      excel: 'tokens/字��',
       ppt: 'tokens/字符',
       pdf: 'tokens/字符',
       word: 'tokens/字符',
@@ -942,7 +942,7 @@ export function TokenEstimator() {
         <h5 className="text-sm font-medium text-gray-900 mb-2">成本构成说明</h5>
         <div className="space-y-2 text-sm text-gray-600">
           <p>• 向量化成本：每月新增文档的向量化费用（月增长率 × 初始文档量）</p>
-          <p>• ��话输入成本：活跃用户 × 日均查询次数 × 30天 × 每次查询token数</p>
+          <p>• 对话输入成本：活跃用户 × 日均查询次数 × 30天 × 每次查询token数</p>
           <p>• 对话输出成本：对话输入token × 输出比例（默认0.7）</p>
         </div>
       </div>
