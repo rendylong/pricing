@@ -133,7 +133,7 @@ const INDUSTRY_PATTERNS: Record<string, IndustryPattern> = {
         queriesPerActiveUser: 6,
         turnsPerQuery: 5,
         teamSize: { total: 500, activeRatio: 0.9 },
-        // 科技公司特点：文本文件和PPT占比高，反映技术文档和产品演示需求
+        // 科技公司特点：文本文件和PPT占比高，反映技术文档和产品演示��求
         documentsPerUser: {
           text: 20,     // 技术文档
           ppt: 10,      // 产品演示
@@ -171,7 +171,7 @@ const INDUSTRY_PATTERNS: Record<string, IndustryPattern> = {
     }
   },
   k12: {
-    description: '中小学校的知识库以教案、试题和学生作业为主。Word和PPT占比较高，反映了教学资料的特点。人均文档量适中。',
+    description: '中小学校的知识库以教案、试题和学生作业为主。Word和PPT占比较高，反映了教学资料��特点。人均文档量适中。',
     monthlyGrowthRate: 0.05,
     queriesPerActiveUser: 3,
     turnsPerQuery: 4,
@@ -218,7 +218,7 @@ const BASE_PRICING = {
   minStorage: 200,        // 最少存储空间(MB)
 } as const;
 
-// 添加价格计算函数
+// 添加��格计算函数
 const calculateBasicPrice = (
   users: number,
   messages: number,
@@ -291,6 +291,26 @@ interface CalculationResult {
     embedding: number;
     chatInput: number;
     chatOutput: number;
+  };
+}
+
+// 定义计算成本的函数类型
+interface CostCalculationInput {
+  embedding: number;
+  chatInput?: number;
+  chatOutput?: number;
+}
+
+interface CostCalculationResult {
+  initial: { 
+    embedding: number; 
+    total: number;
+  };
+  monthly: {
+    embedding: number;
+    chatInput: number;
+    chatOutput: number;
+    total: number;
   };
 }
 
@@ -558,37 +578,39 @@ export function TokenEstimator() {
     }
   }
 
-  const calculateCost = (initialUsage: any, monthlyUsage: any) => {
-    const selectedEmbeddingModel = models.find(m => m.id === selectedEmbeddingModelId)
-    const selectedChatModel = models.find(m => m.id === selectedChatModelId)
+  // 修改计算成本的函数
+  const calculateCost = (
+    initialUsage: CostCalculationInput,
+    monthlyUsage: CostCalculationInput
+  ): CostCalculationResult => {
+    const selectedEmbeddingModel = models.find(m => m.id === selectedEmbeddingModelId);
+    const selectedChatModel = models.find(m => m.id === selectedChatModelId);
 
     if (!selectedEmbeddingModel || !selectedChatModel) {
-      throw new Error('No model selected')
+      throw new Error('Selected models not found');
     }
 
-    const embeddingPrice = Number(selectedEmbeddingModel.inputPrice)
-    const chatInputPrice = Number(selectedChatModel.inputPrice)
-    const chatOutputPrice = Number(selectedChatModel.outputPrice || selectedChatModel.inputPrice)
-
-    const initialEmbeddingCost = (initialUsage.embedding / 1000000) * embeddingPrice
-
-    const monthlyEmbeddingCost = (monthlyUsage.embedding / 1000000) * embeddingPrice
-    const monthlyChatInputCost = (monthlyUsage.chatInput / 1000000) * chatInputPrice
-    const monthlyChatOutputCost = (monthlyUsage.chatOutput / 1000000) * chatOutputPrice
+    const embeddingPrice = Number(selectedEmbeddingModel.inputPrice);
+    const chatInputPrice = Number(selectedChatModel.inputPrice);
+    const chatOutputPrice = Number(selectedChatModel.outputPrice || selectedChatModel.inputPrice);
 
     return {
       initial: {
-        embedding: initialEmbeddingCost,
-        total: initialEmbeddingCost
+        embedding: (initialUsage.embedding / 1000000) * embeddingPrice,
+        total: (initialUsage.embedding / 1000000) * embeddingPrice
       },
       monthly: {
-        embedding: monthlyEmbeddingCost,
-        chatInput: monthlyChatInputCost,
-        chatOutput: monthlyChatOutputCost,
-        total: monthlyEmbeddingCost + monthlyChatInputCost + monthlyChatOutputCost
+        embedding: (monthlyUsage.embedding / 1000000) * embeddingPrice,
+        chatInput: ((monthlyUsage.chatInput || 0) / 1000000) * chatInputPrice,
+        chatOutput: ((monthlyUsage.chatOutput || 0) / 1000000) * chatOutputPrice,
+        total: (
+          (monthlyUsage.embedding / 1000000) * embeddingPrice +
+          ((monthlyUsage.chatInput || 0) / 1000000) * chatInputPrice +
+          ((monthlyUsage.chatOutput || 0) / 1000000) * chatOutputPrice
+        )
       }
-    }
-  }
+    };
+  };
 
   // 渲染 Token 倍率配置部分
   const renderTokenMultipliers = () => {
@@ -920,7 +942,7 @@ export function TokenEstimator() {
         <h5 className="text-sm font-medium text-gray-900 mb-2">成本构成说明</h5>
         <div className="space-y-2 text-sm text-gray-600">
           <p>• 向量化成本：每月新增文档的向量化费用（月增长率 × 初始文档量）</p>
-          <p>• 对话输入成本：活跃用户 × 日均查询次数 × 30天 × 每次查询token数</p>
+          <p>• ��话输入成本：活跃用户 × 日均查询次数 × 30天 × 每次查询token数</p>
           <p>• 对话输出成本：对话输入token × 输出比例（默认0.7）</p>
         </div>
       </div>

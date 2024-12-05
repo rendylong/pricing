@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { NumericInput } from '@/components/ui/NumericInput'
 
 interface Dimensions {
