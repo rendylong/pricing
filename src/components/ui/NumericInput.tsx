@@ -1,19 +1,19 @@
 'use client'
 
 interface NumericInputProps {
-  value: number | ''
-  onChange: (value: number | '') => void
-  label?: string
-  unit?: string
-  className?: string
+  value: number | '';
+  onChange: (value: number | '') => void;
+  min?: number;
+  max?: number;
+  step?: number;
 }
 
 export function NumericInput({
   value,
   onChange,
-  label,
-  unit,
-  className = ''
+  min,
+  max,
+  step
 }: NumericInputProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value
@@ -44,17 +44,9 @@ export function NumericInput({
                      rounded-md shadow-sm focus:ring-1 focus:ring-primary-500 
                      focus:border-primary-500 sm:text-sm
                      [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none 
-                     [&::-webkit-inner-spin-button]:appearance-none ${className}`}
+                     [&::-webkit-inner-spin-button]:appearance-none`}
         />
-        {unit && (
-          <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-            <span className="text-gray-500 sm:text-sm">{unit}</span>
-          </div>
-        )}
       </div>
-      {label && (
-        <p className="mt-1 text-xs text-gray-500">{label}</p>
-      )}
     </div>
   )
 } 

@@ -526,7 +526,7 @@ export function TokenEstimator() {
     });
   }
 
-  // 添加文数量计算函数
+  // ���加文数量计算函数
   const calculateDocumentCounts = (
     teamSize: number,
     documentsPerUser: Record<string, number>
@@ -616,7 +616,7 @@ export function TokenEstimator() {
       text: '纯文本倍率',
       excel: 'Excel 倍率',
       ppt: 'PPT 倍率',
-      pdf: 'PDF 率',
+      pdf: 'PDF 倍率',
       word: 'Word 倍率',
       email: '件倍率',
       image: '图倍率',
@@ -660,15 +660,18 @@ export function TokenEstimator() {
                 {labels[type]}
               </label>
               <NumericInput
-                value={multiplier}
+                value={multiplier as number}
                 onChange={(value) => {
-                  setTokenMultipliers((prev: typeof tokenMultipliers) => ({
-                    ...prev,
-                    [type]: value as number
-                  }))
+                  if (value !== '') {
+                    setTokenMultipliers(prev => ({
+                      ...prev,
+                      [type]: value
+                    }))
+                  }
                 }}
-                step={type === 'image' || type === 'audio' || type === 'video' ? 10 : 0.1}
                 min={0.1}
+                max={type === 'image' || type === 'audio' || type === 'video' ? 1000 : 10}
+                step={type === 'image' || type === 'audio' || type === 'video' ? 10 : 0.1}
               />
               <div className="flex flex-col space-y-1">
                 <p className="text-xs text-gray-500">
@@ -736,7 +739,7 @@ export function TokenEstimator() {
       input: 200,    // 用户输入的平均token数
       context: 2000, // 上下文的平均token数
       systemPrompt: 300, // 系统提示的token数
-      outputMultiplier: 0.7 // 输出token与输入token的比例
+      outputMultiplier: 0.7 // 输出token与输入token的比���
     }
 
     const tokensPerConversation = 
@@ -813,7 +816,7 @@ export function TokenEstimator() {
         />
       </div>
 
-      {/* Token 倍配置 */}
+      {/* Token ��配置 */}
       {renderTokenMultipliers()}
 
       <div className="bg-white rounded-lg shadow-lg p-6">
@@ -880,9 +883,13 @@ export function TokenEstimator() {
                 </label>
                 <NumericInput
                   value={monthlyPattern.monthlyGrowthRate * 100}
-                  onChange={(value) => handlePatternChange({ 
-                    monthlyGrowthRate: (value as number) / 100 
-                  })}
+                  onChange={(value) => {
+                    if (value !== '') {
+                      handlePatternChange({ 
+                        monthlyGrowthRate: value / 100 
+                      })
+                    }
+                  }}
                   min={1}
                   max={100}
                   step={1}
@@ -897,9 +904,13 @@ export function TokenEstimator() {
                 </label>
                 <NumericInput
                   value={monthlyPattern.queriesPerActiveUser}
-                  onChange={(value) => handlePatternChange({ 
-                    queriesPerActiveUser: value as number 
-                  })}
+                  onChange={(value) => {
+                    if (value !== '') {
+                      handlePatternChange({ 
+                        queriesPerActiveUser: value as number 
+                      })
+                    }
+                  }}
                   min={1}
                   max={20}
                   step={1}
@@ -914,9 +925,13 @@ export function TokenEstimator() {
                 </label>
                 <NumericInput
                   value={monthlyPattern.turnsPerQuery}
-                  onChange={(value) => handlePatternChange({ 
-                    turnsPerQuery: value as number 
-                  })}
+                  onChange={(value) => {
+                    if (value !== '') {
+                      handlePatternChange({ 
+                        turnsPerQuery: value as number 
+                      })
+                    }
+                  }}
                   min={1}
                   max={10}
                   step={1}
