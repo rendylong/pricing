@@ -1,5 +1,41 @@
 'use client'
 
+import { Feature } from './types'
+
+// 添加基础价格配置
+const BASE_PRICING = {
+  userPrice: 20,          // 每用户月费 $20
+  messageUnit: 1000,      // 消息计费单位
+  messagePrice: 10,       // 每1000条消息 $10
+  storageUnit: 100,       // 存储计费单位(MB)
+  storagePrice: 15,       // 每100MB存储 $15
+  minUsers: 3,            // 最少用户数
+  minMessages: 5000,      // 最少消息数
+  minStorage: 200,        // 最少存储空间(MB)
+} as const;
+
+// 添加类型定义
+interface PriceBreakdownProps {
+  pricing: {
+    users: number;
+    messageCredits: number;
+    vectorStorage: number;
+    storageUnit: 'MB' | 'GB';
+    selectedFeatures: string[];
+    billingCycle: 'monthly' | 'yearly';
+    currency: string;
+    yearlyDiscountRate: number;
+    yearlyDiscountEnabled: boolean;
+    basePricing: {
+      userPrice: number;
+      messagePrice: number;
+      storagePrice: number;
+    };
+  };
+  features: Feature[];
+  className?: string;
+}
+
 export function PriceBreakdown({ pricing, features, className }: PriceBreakdownProps) {
   // 使用传入的自定义价格
   const calculateBasicCosts = () => {

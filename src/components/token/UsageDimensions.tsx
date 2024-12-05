@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Select } from '@/components/ui/Select'
+import { NumericInput } from '@/components/ui/NumericInput'
 
 interface Dimensions {
   documents: Record<string, string>;
@@ -11,6 +12,7 @@ interface Dimensions {
     activeUsers: number;
   };
   selectedTemplate?: string;
+  avgImageSize?: string | number;
   [key: string]: unknown;
 }
 
@@ -36,7 +38,7 @@ export function UsageDimensions({ dimensions, onChange, type }: UsageDimensionsP
       ...dimensions,
       documents: {
         ...dimensions.documents,
-        [type]: value
+        [type]: value.toString()
       }
     })
   }
@@ -46,7 +48,7 @@ export function UsageDimensions({ dimensions, onChange, type }: UsageDimensionsP
       ...dimensions,
       avgDocumentLength: {
         ...dimensions.avgDocumentLength,
-        [type]: value
+        [type]: value.toString()
       }
     })
   }
@@ -96,11 +98,11 @@ export function UsageDimensions({ dimensions, onChange, type }: UsageDimensionsP
             </label>
             <NumericInput
               value={dimensions.teamSize?.total || ''}
-              onChange={(value) => onChange({
+              onChange={(value: number | '') => onChange({
                 ...dimensions,
                 teamSize: {
                   ...dimensions.teamSize,
-                  total: value,
+                  total: value as number,
                   activeUsers: Math.round((value as number) * 0.3) // 默认30%的活跃度
                 }
               })}
@@ -116,12 +118,12 @@ export function UsageDimensions({ dimensions, onChange, type }: UsageDimensionsP
             </label>
             <NumericInput
               value={dimensions.teamSize?.activeUsers || ''}
-              onChange={(value) => onChange({
+              onChange={(value: number | '') => onChange({
                 ...dimensions,
                 teamSize: {
                   ...dimensions.teamSize,
                   total: dimensions.teamSize?.total || 0,
-                  activeUsers: value
+                  activeUsers: value as number
                 }
               })}
               placeholder="请输入活跃用户数"
