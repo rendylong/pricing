@@ -30,7 +30,7 @@ export function HomePage({ lang }: HomePageProps) {
               Token 估算器 →
             </Link>
           </div>
-          <PricingCalculator lang={lang} />
+          <PricingCalculator />
         </div>
       </main>
     </div>

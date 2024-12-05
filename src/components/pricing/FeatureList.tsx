@@ -3,8 +3,7 @@
 import { useState } from 'react'
 import { Feature } from './types'
 import { NumberInput } from '@/components/ui/NumberInput'
-import { CheckIcon, XMarkIcon, PencilSquareIcon, XCircleIcon } from '@heroicons/react/24/outline'
-import { cn } from '@/lib/utils'
+import { CheckIcon, XMarkIcon, PencilSquareIcon } from '@heroicons/react/24/outline'
 
 interface FeatureListProps {
   features: Feature[]

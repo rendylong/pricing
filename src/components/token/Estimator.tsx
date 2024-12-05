@@ -4,17 +4,6 @@ import { useState, useEffect } from 'react'
 import { ModelPriceEditor } from './ModelPriceEditor'
 import { EstimationResults } from './EstimationResults'
 import { UsageDimensions } from './UsageDimensions'
-import { calculateTokensForDocument } from '@/utils/tokenCalculator'
-import { NumericInput } from '@/components/ui/NumericInput'
-
-// Token 倍率配置类型
-interface TokenMultipliers {
-  text: number      // 纯文本基准倍率
-  excel: number     // Excel 倍率
-  ppt: number       // PPT 倍率
-  pdf: number       // PDF 倍率
-  image: number     // 图片倍率（每百万像素）
-}
 
 // 存储键名
 const STORAGE_KEYS = {
@@ -48,8 +37,8 @@ const DEFAULT_MODELS = [
   }
 ]
 
-// 添加验证工具函数
-const validateNumber = (value: any, step: string, required: boolean = true): number => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const validateNumber = (value: string | number | undefined, step: string, required: boolean = true): number => {
   if (!required && !value) return 0
   const num = Number(value)
   if (isNaN(num)) {
@@ -103,7 +92,7 @@ interface IndustryPattern {
 // 添加行业特性配置
 const INDUSTRY_PATTERNS: Record<string, IndustryPattern> = {
   bank: {
-    description: '银行的知识库以金融产品文档、合规文件和报表为主。Excel、PDF占比较高，反映了金融行业对数据分析和规范化文档的需求。人均文档量较大。',
+    description: '银行的知识库以金融��品文档、合规文件和报表为主。Excel、PDF占比较高，反映了金融行业数据分析和规范化文档的需求。人均文档量较大。',
     monthlyGrowthRate: 0.15,
     queriesPerActiveUser: 5,
     turnsPerQuery: 6,
@@ -223,7 +212,7 @@ const BASE_PRICING = {
   messagePrice: 10,       // 每1000条消息 $10
   storageUnit: 100,       // 存储计费单位(MB)
   storagePrice: 15,       // 每100MB存储 $15
-  minUsers: 3,            // 最少用户数
+  minUsers: 3,            // 最少用户��
   minMessages: 5000,      // 最少消息数
   minStorage: 200,        // 最少存储空间(MB)
 } as const;
@@ -270,7 +259,7 @@ const calculateBasicPrice = (
   };
 };
 
-export function TokenEstimator({ lang }: { lang: string }) {
+export function TokenEstimator() {
   // 从 localStorage 初始化状态
   const [models, setModels] = useState<ModelPrice[]>(() => {
     if (typeof window === 'undefined') return DEFAULT_MODELS
@@ -368,7 +357,7 @@ export function TokenEstimator({ lang }: { lang: string }) {
   })
 
   // 月度使用量维度状态
-  const [monthlyDimensions, setMonthlyDimensions] = useState({
+  const [monthlyDimensions] = useState({
     documents: {
       text: '',
       excel: '',
@@ -685,7 +674,7 @@ export function TokenEstimator({ lang }: { lang: string }) {
     setBasicPrice(price);
   };
 
-  // 修改计算文档数量的函数
+  // 修改计文档数量的函数
   const calculateDocumentCounts = (
     teamSize: number,
     documentsPerUser: Record<string, number>
@@ -748,7 +737,7 @@ export function TokenEstimator({ lang }: { lang: string }) {
         />
       </div>
 
-      {/* Token 倍率配置 */}
+      {/* Token 倍配置 */}
       {renderTokenMultipliers()}
 
       <div className="bg-white rounded-lg shadow-lg p-6">
