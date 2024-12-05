@@ -17,17 +17,17 @@ export function HomePage({ lang }: HomePageProps) {
           <div className="flex justify-between items-center mb-12">
             <div className="text-center flex-1">
               <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                {t('pricing.title')}
+                定价计算器
               </h1>
               <p className="text-lg text-gray-600">
-                {t('pricing.subtitle')}
+                根据您的需求选择合适的配置
               </p>
             </div>
             <Link 
-              href={`/${lang}/token`}
+              href="/token"
               className="text-primary-600 hover:text-primary-700 font-medium"
             >
-              {t('nav.tokenEstimator')} →
+              Token 估算器 →
             </Link>
           </div>
           <PricingCalculator lang={lang} />
