@@ -37,7 +37,7 @@ const DEFAULT_FEATURES: Feature[] = [
   {
     id: 'advanced-indexing',
     name: '高级索引优化',
-    description: '自动优化向量索引，提升检索效率���准确度',
+    description: '自动优化向量索引，提升检索效率和准确度',
     price: 199,
     category: 'rag',
     isCustomPrice: true,

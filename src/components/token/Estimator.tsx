@@ -164,7 +164,7 @@ const INDUSTRY_PATTERNS: Record<string, IndustryPattern> = {
           ppt: 8,       // 课件
           excel: 4,     // 成绩单
           text: 6,      // 普通文本
-          email: 15,    // 邮���
+          email: 15,    // 邮件
           image: 5      // 教学图片
         }
       }
