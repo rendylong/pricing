@@ -424,16 +424,6 @@ interface CostCalculationResult {
   };
 }
 
-// 首先修改类型定义
-interface CalculationDimensions {
-  documents: Record<string, number>;  // 改为 number 类型
-  avgDocumentLength: Record<string, number>;  // 改为 number 类型
-  teamSize: {
-    total: number;
-    activeUsers: number;
-  };
-}
-
 // 添加默认的 token multipliers
 const DEFAULT_TOKEN_MULTIPLIERS = {
   text: 1.5,
@@ -509,14 +499,6 @@ export function TokenEstimator() {
 
   // 添加计算结果状态
   const [calculationResult, setCalculationResult] = useState<CalculationResult | null>(null);
-
-  // 添加基础价格状态
-  const [basicPrice, setBasicPrice] = useState<{
-    userCost: number;
-    messageCost: number;
-    storageCost: number;
-    total: number;
-  } | null>(null);
 
   // 添加月度使用量维度状态
   const [monthlyDimensions] = useState({
@@ -624,7 +606,7 @@ export function TokenEstimator() {
     });
   }
 
-  // 添加文���数量计算函数
+  // 添加文数量计算函数
   const calculateDocumentCounts = (
     teamSize: number,
     documentsPerUser: Record<string, number>
@@ -677,16 +659,6 @@ export function TokenEstimator() {
         chatOutput: Number(selectedChatModel.outputPrice || selectedChatModel.inputPrice)
       }
     });
-
-    // 计算基础价格
-    const price = calculateBasicPrice(
-      initialDimensions.teamSize.total,
-      monthlyPattern.queriesPerActiveUser * initialDimensions.teamSize.activeUsers * 30,
-      0, // 暂时设置为0或者添加向量存储计算
-      'MB'
-    );
-    
-    setBasicPrice(price);
   };
 
   // useEffect 移到这里
@@ -1064,7 +1036,7 @@ export function TokenEstimator() {
         <h5 className="text-sm font-medium text-gray-900 mb-2">成本构成说明</h5>
         <div className="space-y-2 text-sm text-gray-600">
           <p>• 向量化成本：每月新增文档的向量化费用（月增长率 × 初始文档量）</p>
-          <p>• 对话输入成本：活跃用户 × 日查询次数 × 30天 × 每次查询token数</p>
+          <p>• 对话输入成本：活跃用户 × 日查询次数 × 30天 × ��次查询token数</p>
           <p>• 对话输出成本：对话输入token × 输出比例（默认0.7）</p>
         </div>
       </div>
