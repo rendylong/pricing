@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { ModelPriceEditor } from './ModelPriceEditor'
 import { EstimationResults } from './EstimationResults'
 import { UsageDimensions } from './UsageDimensions'
+import { NumericInput } from '@/components/ui/NumericInput'
 
 // 存储键名
 const STORAGE_KEYS = {
@@ -258,6 +259,40 @@ const calculateBasicPrice = (
     total
   };
 };
+
+// 定义计算结果的类型
+interface CalculationResult {
+  initialUsage: {
+    embedding: number;
+    documents: Record<string, string>;
+    avgDocumentLength: Record<string, string>;
+    multipliers: Record<string, number>;
+  };
+  monthlyUsage: {
+    embedding: number;
+    chatInput: number;
+    chatOutput: number;
+    pattern: {
+      monthlyGrowthRate: number;
+      queriesPerActiveUser: number;
+      turnsPerQuery: number;
+    };
+  };
+  costs: {
+    initial: { embedding: number; total: number };
+    monthly: {
+      embedding: number;
+      chatInput: number;
+      chatOutput: number;
+      total: number;
+    };
+  };
+  modelPrices: {
+    embedding: number;
+    chatInput: number;
+    chatOutput: number;
+  };
+}
 
 export function TokenEstimator() {
   // 从 localStorage 初始化状态
@@ -612,7 +647,6 @@ export function TokenEstimator() {
     const template = initialDimensions.selectedTemplate
     const pattern = INDUSTRY_PATTERNS[template]
     if (pattern) {
-      const sizePattern = pattern.sizePatterns.small // 使用 small 作为基准
       setMonthlyPattern({
         monthlyGrowthRate: pattern.monthlyGrowthRate,
         queriesPerActiveUser: pattern.queriesPerActiveUser,
@@ -621,13 +655,8 @@ export function TokenEstimator() {
     }
   }, [initialDimensions.selectedTemplate])
 
-  // 添加计算结果的状态
-  const [calculationResult, setCalculationResult] = useState<{
-    initialUsage: any;
-    monthlyUsage: any;
-    costs: any;
-    modelPrices: any;
-  } | null>(null);
+  // 修改计算结果状态的类型
+  const [calculationResult, setCalculationResult] = useState<CalculationResult | null>(null);
 
   // 在 TokenEstimator 组件中添加价格计算结果状态
   const [basicPrice, setBasicPrice] = useState<{
