@@ -526,7 +526,7 @@ export function TokenEstimator() {
     });
   }
 
-  // ���加文数量计算函数
+  // 加文数量计算函数
   const calculateDocumentCounts = (
     teamSize: number,
     documentsPerUser: Record<string, number>
@@ -662,16 +662,11 @@ export function TokenEstimator() {
               <NumericInput
                 value={multiplier as number}
                 onChange={(value) => {
-                  if (value !== '') {
-                    setTokenMultipliers(prev => ({
-                      ...prev,
-                      [type]: value
-                    }))
-                  }
+                  setTokenMultipliers(prev => ({
+                    ...prev,
+                    [type]: value
+                  }))
                 }}
-                min={0.1}
-                max={type === 'image' || type === 'audio' || type === 'video' ? 1000 : 10}
-                step={type === 'image' || type === 'audio' || type === 'video' ? 10 : 0.1}
               />
               <div className="flex flex-col space-y-1">
                 <p className="text-xs text-gray-500">
@@ -739,7 +734,7 @@ export function TokenEstimator() {
       input: 200,    // 用户输入的平均token数
       context: 2000, // 上下文的平均token数
       systemPrompt: 300, // 系统提示的token数
-      outputMultiplier: 0.7 // 输出token与输入token的比���
+      outputMultiplier: 0.7 // 输出token与输入token的比
     }
 
     const tokensPerConversation = 
@@ -816,7 +811,7 @@ export function TokenEstimator() {
         />
       </div>
 
-      {/* Token ��配置 */}
+      {/* Token 配置 */}
       {renderTokenMultipliers()}
 
       <div className="bg-white rounded-lg shadow-lg p-6">
@@ -884,15 +879,10 @@ export function TokenEstimator() {
                 <NumericInput
                   value={monthlyPattern.monthlyGrowthRate * 100}
                   onChange={(value) => {
-                    if (value !== '') {
-                      handlePatternChange({ 
-                        monthlyGrowthRate: value / 100 
-                      })
-                    }
+                    handlePatternChange({ 
+                      monthlyGrowthRate: value !== '' ? value / 100 : ''
+                    })
                   }}
-                  min={1}
-                  max={100}
-                  step={1}
                 />
                 <p className="mt-1 text-xs text-gray-500">
                   每月新增文档占现有文档的百分比
@@ -905,15 +895,10 @@ export function TokenEstimator() {
                 <NumericInput
                   value={monthlyPattern.queriesPerActiveUser}
                   onChange={(value) => {
-                    if (value !== '') {
-                      handlePatternChange({ 
-                        queriesPerActiveUser: value as number 
-                      })
-                    }
+                    handlePatternChange({ 
+                      queriesPerActiveUser: value
+                    })
                   }}
-                  min={1}
-                  max={20}
-                  step={1}
                 />
                 <p className="mt-1 text-xs text-gray-500">
                   每个活跃用户的日均查询次数
@@ -926,15 +911,10 @@ export function TokenEstimator() {
                 <NumericInput
                   value={monthlyPattern.turnsPerQuery}
                   onChange={(value) => {
-                    if (value !== '') {
-                      handlePatternChange({ 
-                        turnsPerQuery: value as number 
-                      })
-                    }
+                    handlePatternChange({ 
+                      turnsPerQuery: value
+                    })
                   }}
-                  min={1}
-                  max={10}
-                  step={1}
                 />
                 <p className="mt-1 text-xs text-gray-500">
                   每次查询的平均对话来回次数

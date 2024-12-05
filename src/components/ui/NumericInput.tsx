@@ -3,17 +3,11 @@
 interface NumericInputProps {
   value: number | '';
   onChange: (value: number | '') => void;
-  min?: number;
-  max?: number;
-  step?: number;
 }
 
 export function NumericInput({
   value,
   onChange,
-  min,
-  max,
-  step
 }: NumericInputProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value
