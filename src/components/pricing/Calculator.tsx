@@ -421,7 +421,7 @@ export function PricingCalculator({ lang }: { lang: string }) {
                     </label>
                     <p className="text-xs text-gray-500">知识库和历史记录的存储空间</p>
                   </div>
-                  <span className="text-xs text-gray-500">最少200MB���储空间</span>
+                  <span className="text-xs text-gray-500">最少200MB向量存储空间</span>
                 </div>
                 <div className="flex rounded-md">
                   <div className="flex-1">
