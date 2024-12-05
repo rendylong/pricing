@@ -55,17 +55,23 @@ interface EstimationResultsProps {
 }
 
 export function EstimationResults({ initialUsage, monthlyUsage, costs, teamSize, modelPrices }: EstimationResultsProps) {
-  const formatNumber = (num: number) => {
-    if (num >= 1000000) {
-      return `${(num / 1000000).toFixed(2)}M`
-    } else if (num >= 1000) {
-      return `${(num / 1000).toFixed(2)}K`
+  const formatNumber = (num: number | string) => {
+    const value = Number(num)
+    if (isNaN(value)) return '0'
+    
+    if (value >= 1000000) {
+      return `${(value / 1000000).toFixed(2)}M`
     }
-    return num.toFixed(2)
+    if (value >= 1000) {
+      return `${(value / 1000).toFixed(2)}K`
+    }
+    return value.toFixed(2)
   }
 
-  const formatCost = (cost: number) => {
-    return `$${cost.toFixed(2)}`
+  const formatCost = (cost: number | string) => {
+    const value = Number(cost)
+    if (isNaN(value)) return '$0'
+    return `$${value.toFixed(2)}`
   }
 
   // 文档类型对应的倍率

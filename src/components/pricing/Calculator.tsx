@@ -5,6 +5,7 @@ import { Select } from '@/components/ui/Select'
 import { FeatureList } from './FeatureList'
 import { PriceBreakdown } from './PriceBreakdown'
 import { NumberInput } from '@/components/ui/NumberInput'
+import { Feature } from './types'
 
 interface PricingState {
   users: number
@@ -16,6 +17,130 @@ interface PricingState {
   currency: string
 }
 
+const DEFAULT_FEATURES: Feature[] = [
+  {
+    id: 'multi-datasource',
+    name: '多数据源接入',
+    description: '支持多种数据源的知识库接入，包括文档、数据库、API等',
+    price: 299,
+    category: 'rag',
+    isCustomPrice: true,
+    billingType: 'monthly'
+  },
+  {
+    id: 'advanced-indexing',
+    name: '高级索引优化',
+    description: '自动优化向量索引，提升检索效率和准确度',
+    price: 199,
+    category: 'rag',
+    isCustomPrice: true,
+    billingType: 'monthly'
+  },
+  {
+    id: 'custom-embedding',
+    name: '自定义向量模型',
+    description: '使用自定义的向量模型进行文档嵌入',
+    price: 499,
+    category: 'rag',
+    isCustomPrice: true,
+    billingType: 'monthly'
+  },
+  {
+    id: 'sync-realtime',
+    name: '实时同步更新',
+    description: '知识库内容实时更新和同步',
+    price: 149,
+    category: 'rag',
+    isCustomPrice: true,
+    billingType: 'monthly'
+  },
+  
+  {
+    id: 'data-encryption',
+    name: '数据加密存储',
+    description: '全程加密的数据存储和传输',
+    price: 199,
+    category: 'security',
+    isCustomPrice: true,
+    billingType: 'monthly'
+  },
+  {
+    id: 'audit-log',
+    name: '审计日志',
+    description: '详细的操作记录和安全审计',
+    price: 99,
+    category: 'security',
+    isCustomPrice: true,
+    billingType: 'monthly'
+  },
+  
+  {
+    id: 'api-integration',
+    name: 'API 集成服务',
+    description: '专业的 API 集成实施服务',
+    price: 4999,
+    category: 'integration',
+    isCustomPrice: true,
+    billingType: 'onetime'
+  },
+  {
+    id: 'custom-domain',
+    name: '自定义域名配置',
+    description: '域名配置与 SSL 证书部署',
+    price: 999,
+    category: 'integration',
+    isCustomPrice: true,
+    billingType: 'onetime'
+  },
+  {
+    id: 'sso-setup',
+    name: 'SSO 单点登录配置',
+    description: '企业 SSO 系统对接与配置',
+    price: 2999,
+    category: 'integration',
+    isCustomPrice: true,
+    billingType: 'onetime'
+  },
+  
+  {
+    id: 'api-access',
+    name: 'API 访问权限',
+    description: '通过 API 访问所有功能',
+    price: 299,
+    category: 'integration',
+    isCustomPrice: true,
+    billingType: 'monthly'
+  },
+  
+  {
+    id: 'priority-support',
+    name: '优先技术支持',
+    description: '7x24小时技术支持服务',
+    price: 499,
+    category: 'support',
+    isCustomPrice: true,
+    billingType: 'monthly'
+  },
+  {
+    id: 'training',
+    name: '培训服务',
+    description: '定制化的培训和咨询服务',
+    price: 9999,
+    category: 'support',
+    isCustomPrice: true,
+    billingType: 'onetime'
+  },
+  {
+    id: 'custom-development',
+    name: '定制开发服务',
+    description: '定制化的功能开发服务',
+    price: 19999,
+    category: 'support',
+    isCustomPrice: true,
+    billingType: 'onetime'
+  }
+]
+
 export function PricingCalculator({ lang }: { lang: string }) {
   const [state, setState] = useState<PricingState>({
     users: 3,
@@ -26,110 +151,158 @@ export function PricingCalculator({ lang }: { lang: string }) {
     billingCycle: 'monthly',
     currency: 'USD'
   })
+  const [features, setFeatures] = useState(DEFAULT_FEATURES)
+
+  const handlePriceChange = (featureId: string, newPrice: number) => {
+    setFeatures(features.map(feature => 
+      feature.id === featureId ? { ...feature, price: newPrice } : feature
+    ))
+  }
 
   return (
-    <div className="space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="space-y-6">
-          {/* 用户数量 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              团队成员
-            </label>
-            <NumberInput
-              min={3}
-              value={state.users}
-              onChange={(value) => setState({ ...state, users: value })}
-            />
-            <p className="mt-1 text-sm text-gray-500">最少3个用户</p>
-          </div>
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-5xl mx-auto">
+        {/* 标题区域 */}
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">定制您的计划</h2>
+          <p className="text-lg text-gray-600">根据您的需求选择合适的配置</p>
+        </div>
 
-          {/* 消息额度 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              消息额度
-            </label>
-            <NumberInput
-              min={5000}
-              step={1000}
-              value={state.messageCredits}
-              onChange={(value) => setState({ ...state, messageCredits: value })}
-            />
-            <p className="mt-1 text-sm text-gray-500">最少5,000条消息</p>
-          </div>
-
-          {/* 向量存储 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              向量存储
-            </label>
-            <div className="mt-1 flex rounded-md shadow-sm">
-              <NumberInput
-                value={state.vectorStorage}
-                onChange={(value) => setState({ ...state, vectorStorage: value })}
-              />
-              <Select
-                value={state.storageUnit}
-                onChange={(e) => setState({ ...state, storageUnit: e.target.value as 'MB' | 'GB' })}
-                className="rounded-none rounded-r-md"
+        {/* 付费周期选择 */}
+        <div className="mb-12">
+          <div className="max-w-md mx-auto bg-white rounded-xl shadow-sm border border-gray-200 p-1">
+            <div className="grid grid-cols-2 gap-1">
+              <button
+                onClick={() => setState(prev => ({ ...prev, billingCycle: 'monthly' }))}
+                className={`py-2 px-4 rounded-lg text-sm font-medium transition-colors
+                  ${state.billingCycle === 'monthly'
+                    ? 'bg-primary-50 text-primary-700'
+                    : 'text-gray-600 hover:text-gray-900'
+                  }`}
               >
-                <option value="MB">MB</option>
-                <option value="GB">GB</option>
-              </Select>
-            </div>
-            <p className="mt-1 text-sm text-gray-500">最少200MB存储空间</p>
-          </div>
-
-          {/* 付费周期 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              付费周期
-            </label>
-            <div className="flex space-x-4">
-              <label className="inline-flex items-center">
-                <input
-                  type="radio"
-                  value="monthly"
-                  checked={state.billingCycle === 'monthly'}
-                  onChange={(e) => setState({ ...state, billingCycle: e.target.value as 'monthly' | 'yearly' })}
-                  className="form-radio text-primary-600"
-                />
-                <span className="ml-2">月付</span>
-              </label>
-              <label className="inline-flex items-center">
-                <input
-                  type="radio"
-                  value="yearly"
-                  checked={state.billingCycle === 'yearly'}
-                  onChange={(e) => setState({ ...state, billingCycle: e.target.value as 'monthly' | 'yearly' })}
-                  className="form-radio text-primary-600"
-                />
-                <span className="ml-2">年付</span>
-              </label>
-              {state.billingCycle === 'yearly' && (
-                <span className="text-sm text-green-600">
-                  年付可节省20%
+                月付
+              </button>
+              <button
+                onClick={() => setState(prev => ({ ...prev, billingCycle: 'yearly' }))}
+                className={`py-2 px-4 rounded-lg text-sm font-medium transition-colors relative
+                  ${state.billingCycle === 'yearly'
+                    ? 'bg-primary-50 text-primary-700'
+                    : 'text-gray-600 hover:text-gray-900'
+                  }`}
+              >
+                年付
+                <span className="absolute -top-2 -right-2 bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">
+                  -20%
                 </span>
-              )}
+              </button>
             </div>
           </div>
         </div>
 
-        <div>
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
-            附加功能
-          </h3>
-          <FeatureList
-            selectedFeatures={state.selectedFeatures}
-            onFeatureChange={(features) => setState({ ...state, selectedFeatures: features })}
-          />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* 主要配置区域 */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* 基础配置卡片 */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-6">
+              <h3 className="text-lg font-semibold text-gray-900 pb-4 border-b border-gray-200">
+                基础配置
+              </h3>
+              
+              {/* 用户数量 */}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-900">
+                      团队成员
+                    </label>
+                    <p className="text-xs text-gray-500">每个成员独立的对话空间和权</p>
+                  </div>
+                  <span className="text-xs text-gray-500">最少3个用户</span>
+                </div>
+                <NumberInput
+                  min={3}
+                  value={state.users}
+                  onChange={(value) => setState({ ...state, users: value })}
+                  onClear={() => setState({ ...state, users: 3 })}
+                  className="w-full h-9 px-3 py-1"
+                />
+              </div>
+
+              {/* 消息额度 */}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-900">
+                      消息额度
+                    </label>
+                    <p className="text-xs text-gray-500">每月可发送的消息数量</p>
+                  </div>
+                  <span className="text-xs text-gray-500">最少5,000条消息</span>
+                </div>
+                <NumberInput
+                  min={5000}
+                  step={1000}
+                  value={state.messageCredits}
+                  onChange={(value) => setState({ ...state, messageCredits: value })}
+                  onClear={() => setState({ ...state, messageCredits: 5000 })}
+                  className="w-full h-9 px-3 py-1"
+                />
+              </div>
+
+              {/* 向量存储 */}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-900">
+                      向量存储
+                    </label>
+                    <p className="text-xs text-gray-500">知识库和历史记录的存储空间</p>
+                  </div>
+                  <span className="text-xs text-gray-500">最少200MB存储空间</span>
+                </div>
+                <div className="flex rounded-md shadow-sm">
+                  <NumberInput
+                    value={state.vectorStorage}
+                    onChange={(value) => setState({ ...state, vectorStorage: value })}
+                    onClear={() => setState({ ...state, vectorStorage: 200 })}
+                    className="flex-1 rounded-r-none h-9 px-3 py-1"
+                  />
+                  <Select
+                    value={state.storageUnit}
+                    onChange={(e) => setState({ ...state, storageUnit: e.target.value as 'MB' | 'GB' })}
+                    className="w-20 rounded-l-none border-l-0 bg-gray-50 text-sm"
+                  >
+                    <option value="MB">MB</option>
+                    <option value="GB">GB</option>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            {/* 附加功能卡片 */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">
+                附加功能
+              </h3>
+              <FeatureList
+                features={features}
+                selectedFeatures={state.selectedFeatures}
+                onFeatureChange={(features) => setState({ ...state, selectedFeatures: features })}
+                onPriceChange={handlePriceChange}
+              />
+            </div>
+          </div>
+
+          {/* 价格明细卡片 - 固定在右侧 */}
+          <div className="lg:sticky lg:top-8 lg:h-fit">
+            <PriceBreakdown
+              pricing={state}
+              features={features}
+              className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6"
+            />
+          </div>
         </div>
       </div>
-
-      <PriceBreakdown
-        pricing={state}
-        className="mt-8"
-      />
     </div>
   )
 } 

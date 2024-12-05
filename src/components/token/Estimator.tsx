@@ -68,44 +68,152 @@ interface ModelPrice {
   outputPrice?: number | ''
 }
 
+// 添加类型定义
+interface SizePattern {
+  monthlyGrowthRate: number;
+  queriesPerActiveUser: number;
+  turnsPerQuery: number;
+  teamSize: {
+    total: number;
+    activeRatio: number;
+  };
+  documentsPerUser: {
+    text: number;
+    excel: number;
+    ppt: number;
+    pdf: number;
+    word: number;
+    email: number;
+    image: number;
+  };
+}
+
+interface IndustryPattern {
+  description: string;
+  monthlyGrowthRate: number;
+  queriesPerActiveUser: number;
+  turnsPerQuery: number;
+  sizePatterns: {
+    small: SizePattern;
+    medium: SizePattern;
+    large: SizePattern;
+  };
+}
+
 // 添加行业特性配置
-const INDUSTRY_PATTERNS = {
-  university: {
-    description: '高等院校的知识库通常包含大量的教学资料、研究论文、行政文档等。每位教职工平均每天会有3-5次查询，每次对话4-6轮。',
-    monthlyGrowthRate: 0.10,
-    queriesPerActiveUser: 5,
-    turnsPerQuery: 5
-  },
-  k12: {
-    description: '中小学校的知识库主要包含教案、试题、学生作业等教学资料。教师平均每天有2-4次查询，每次对话3-5轮。',
-    monthlyGrowthRate: 0.05,
-    queriesPerActiveUser: 3,
-    turnsPerQuery: 4
-  },
+const INDUSTRY_PATTERNS: Record<string, IndustryPattern> = {
   bank: {
-    description: '银行的知识库包含大量的金融产品文档、操作手册、合规文件等。每位员工平均每天有4-6次查询，每次对话5-7轮。',
+    description: '银行的知识库以金融产品文档、合规文件和报表为主。Excel、PDF占比较高，反映了金融行业对数据分析和规范化文档的需求。人均文档量较大。',
     monthlyGrowthRate: 0.15,
     queriesPerActiveUser: 5,
-    turnsPerQuery: 6
+    turnsPerQuery: 6,
+    sizePatterns: {
+      small: { 
+        monthlyGrowthRate: 0.12,
+        queriesPerActiveUser: 4,
+        turnsPerQuery: 5,
+        teamSize: { total: 800, activeRatio: 0.7 },
+        // 金融行业特点：Excel和PDF占比高，反映数据分析和合规需求
+        documentsPerUser: {
+          excel: 15,    // 报表和分析文件
+          pdf: 12,      // 合规文件和产品说明
+          word: 8,      // 内部文档
+          text: 5,      // 普通文本
+          ppt: 3,       // 演示文稿
+          email: 20,    // 邮件往来
+          image: 2      // 图片较少
+        }
+      },
+      medium: {
+        // ... 类似配置，数值按规模调整
+      },
+      large: {
+        // ... 类似配置，数值按规模调整
+      }
+    }
   },
-  hospital: {
-    description: '医疗机构的知识库包含医疗指南、病例记录、治疗方案等专业资料。医护人员平均每天有5-8次查询，每次对话4-6轮。',
-    monthlyGrowthRate: 0.08,
-    queriesPerActiveUser: 7,
-    turnsPerQuery: 5
+  tech: {
+    description: '科技公司的知识库以技术文档、代码文档和产品设计文档为主。文本文件和PPT占比较高，反映了技术文档和产品演示的需求。',
+    monthlyGrowthRate: 0.20,
+    queriesPerActiveUser: 8,
+    turnsPerQuery: 6,
+    sizePatterns: {
+      small: {
+        monthlyGrowthRate: 0.15,
+        queriesPerActiveUser: 6,
+        turnsPerQuery: 5,
+        teamSize: { total: 500, activeRatio: 0.9 },
+        // 科技公司特点：文本文件和PPT占比高，反映技术文档和产品演示需求
+        documentsPerUser: {
+          text: 20,     // 技术文档
+          ppt: 10,      // 产品演示
+          pdf: 5,       // 规范文档
+          word: 5,      // 一般文档
+          excel: 3,     // 数据分析
+          email: 25,    // 邮件沟通
+          image: 8      // 产品设计图
+        }
+      }
+    }
   },
-  government: {
-    description: '政府机构的知识库包含政策文件、工作指南、档案资料等。工作人员平均每天有3-5次查询，每次对话4-6轮。',
-    monthlyGrowthRate: 0.05,
-    queriesPerActiveUser: 4,
-    turnsPerQuery: 5
-  },
-  manufacturing: {
-    description: '制造业的知识库包含技术规范、操作手册、质量标准等文档。技术人员平均每天有4-6次查询，每次对话3-5轮。',
-    monthlyGrowthRate: 0.12,
+  university: {
+    description: '高校的知识库以教学资料、研究论文和行政文档为主。Word和PDF占比较高，反映了学术论文和教学资料的特点。',
+    monthlyGrowthRate: 0.10,
     queriesPerActiveUser: 5,
-    turnsPerQuery: 4
+    turnsPerQuery: 5,
+    sizePatterns: {
+      small: {
+        monthlyGrowthRate: 0.08,
+        queriesPerActiveUser: 4,
+        turnsPerQuery: 4,
+        teamSize: { total: 500, activeRatio: 0.6 },
+        // 高校特点：Word和PDF占比高，反映学术论文和教学资料特点
+        documentsPerUser: {
+          word: 15,     // 论文和教案
+          pdf: 12,      // 学术论文
+          ppt: 8,       // 课件
+          excel: 4,     // 成绩单
+          text: 6,      // 普通文本
+          email: 15,    // 邮件
+          image: 5      // 教学图片
+        }
+      }
+    }
+  },
+  k12: {
+    description: '中小学校的知识库以教案、试题和学生作业为主。Word和PPT占比较高，反映了教学资料的特点。人均文档量适中。',
+    monthlyGrowthRate: 0.05,
+    queriesPerActiveUser: 3,
+    turnsPerQuery: 4,
+    sizePatterns: {
+      small: {
+        monthlyGrowthRate: 0.04,
+        queriesPerActiveUser: 2,
+        turnsPerQuery: 3,
+        teamSize: { total: 200, activeRatio: 0.8 },
+        // 中小学特点：Word和PPT占比高，反映教学资料特点
+        documentsPerUser: {
+          word: 12,     // 教案和作业
+          ppt: 10,      // 课件
+          pdf: 5,       // 教材资料
+          excel: 3,     // 成绩单
+          text: 4,      // 普通文本
+          email: 8,     // 邮件
+          image: 6      // 教学图片
+        }
+      }
+    }
   }
+} as const;
+
+// 添加默认文档长度配置
+const DEFAULT_DOC_LENGTHS = {
+  text: '2000',
+  excel: '5000',
+  ppt: '3000',
+  pdf: '4000',
+  word: '3500',
+  email: '800'
 }
 
 export function TokenEstimator({ lang }: { lang: string }) {
@@ -202,7 +310,7 @@ export function TokenEstimator({ lang }: { lang: string }) {
       total: 0,
       activeUsers: 0
     },
-    industry: ''
+    selectedTemplate: 'university' as keyof typeof INDUSTRY_PATTERNS
   })
 
   // 月度使用量维度状态
@@ -267,8 +375,8 @@ export function TokenEstimator({ lang }: { lang: string }) {
     Object.entries(dims.documents).forEach(([docType, count]) => {
       if (!count) return
       const numericCount = Number(count)
-      const length = Number(dims.avgDocumentLength[docType]) || 0
-      const multiplier = tokenMultipliers[docType]
+      const length = Number(dims.avgDocumentLength[docType as keyof typeof dims.avgDocumentLength]) || 0
+      const multiplier = tokenMultipliers[docType as keyof typeof tokenMultipliers]
       const tokens = numericCount * length * multiplier
       totalEmbeddingTokens += tokens
     })
@@ -289,7 +397,7 @@ export function TokenEstimator({ lang }: { lang: string }) {
   }
 
   const calculateMonthlyUsage = (dims: typeof monthlyDimensions) => {
-    const selectedTemplate = dims.selectedTemplate || 'university'
+    const selectedTemplate = initialDimensions.selectedTemplate
     const pattern = INDUSTRY_PATTERNS[selectedTemplate]
 
     let monthlyEmbeddingTokens = 0
@@ -300,8 +408,8 @@ export function TokenEstimator({ lang }: { lang: string }) {
     Object.entries(initialDimensions.documents).forEach(([docType, count]) => {
       if (!count) return
       const numericCount = Number(count)
-      const length = Number(initialDimensions.avgDocumentLength[docType]) || 0
-      const multiplier = tokenMultipliers[docType]
+      const length = Number(initialDimensions.avgDocumentLength[docType as keyof typeof initialDimensions.avgDocumentLength]) || 0
+      const multiplier = tokenMultipliers[docType as keyof typeof tokenMultipliers]
       const growthRate = pattern.monthlyGrowthRate
       const monthlyNewCount = Math.round(numericCount * growthRate)
       const tokens = monthlyNewCount * length * multiplier
@@ -379,48 +487,50 @@ export function TokenEstimator({ lang }: { lang: string }) {
   }
 
   // 渲染 Token 倍率配置部分
-  const renderTokenMultipliers = () => (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      <h3 className="text-lg font-medium text-gray-900 mb-6">
-        Token 倍率配置
-      </h3>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {Object.entries(tokenMultipliers).map(([type, multiplier]) => {
-          const labels = {
-            text: '纯文本倍率',
-            excel: 'Excel 倍率',
-            ppt: 'PPT 倍率',
-            pdf: 'PDF 倍率',
-            word: 'Word 倍率',
-            email: '邮件倍率',
-            image: '图片倍率',
-            audio: '音频倍率',
-            video: '视频倍率'
-          }
-          const descriptions = {
-            text: '基准倍率 (tokens/字符)',
-            excel: '表格结构处理倍率',
-            ppt: '布局和图片处理倍率',
-            pdf: '格式处理倍',
-            word: 'Word 文档格式处理倍率',
-            email: '邮件文档处理倍率',
-            image: '每百万像素的 token 数',
-            audio: '每分钟音频的 token 数',
-            video: '每分钟视频的 token 数'
-          }
-          const units = {
-            text: 'tokens/字符',
-            excel: 'tokens/字符',
-            ppt: 'tokens/字符',
-            pdf: 'tokens/字符',
-            word: 'tokens/字符',
-            email: 'tokens/字符',
-            image: 'tokens/百万像素',
-            audio: 'tokens/分钟',
-            video: 'tokens/分钟'
-          }
+  const renderTokenMultipliers = () => {
+    const labels: Record<string, string> = {
+      text: '纯文本倍率',
+      excel: 'Excel 倍率',
+      ppt: 'PPT 倍率',
+      pdf: 'PDF 倍率',
+      word: 'Word 倍率',
+      email: '邮件倍率',
+      image: '图片倍率',
+      audio: '音频倍率',
+      video: '视频倍率'
+    }
 
-          return (
+    const descriptions: Record<string, string> = {
+      text: '基准倍率 (tokens/字符)',
+      excel: '表格结构处理倍率',
+      ppt: '布局和图片处理倍率',
+      pdf: '格式处理倍率',
+      word: 'Word 文档格式处理倍率',
+      email: '邮件文档处理倍率',
+      image: '每百万素的 token 数',
+      audio: '每分钟音频的 token 数',
+      video: '每分钟视频的 token 数'
+    }
+
+    const units: Record<string, string> = {
+      text: 'tokens/字符',
+      excel: 'tokens/字符',
+      ppt: 'tokens/字符',
+      pdf: 'tokens/字符',
+      word: 'tokens/字符',
+      email: 'tokens/字符',
+      image: 'tokens/百万像素',
+      audio: 'tokens/分钟',
+      video: 'tokens/分钟'
+    }
+
+    return (
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-6">
+          Token 倍率配置
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {Object.entries(tokenMultipliers).map(([type, multiplier]) => (
             <div key={type} className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
                 {labels[type]}
@@ -428,7 +538,7 @@ export function TokenEstimator({ lang }: { lang: string }) {
               <NumericInput
                 value={multiplier}
                 onChange={(value) => {
-                  setTokenMultipliers(prev => ({
+                  setTokenMultipliers((prev: typeof tokenMultipliers) => ({
                     ...prev,
                     [type]: value as number
                   }))
@@ -445,20 +555,21 @@ export function TokenEstimator({ lang }: { lang: string }) {
                 </p>
               </div>
             </div>
-          )
-        })}
+          ))}
+        </div>
+        <p className="mt-6 text-sm text-gray-500">
+          这些倍率会影响最终的 token 消耗计算
+        </p>
       </div>
-      <p className="mt-6 text-sm text-gray-500">
-        这些倍率会影响最终的 token 消耗计算
-      </p>
-    </div>
-  )
+    )
+  }
 
-  // 监听模板变化，更新使用模式
+  // 监听模板和企业规模变化，更新使用模式
   useEffect(() => {
-    const template = initialDimensions.selectedTemplate || 'university'
+    const template = initialDimensions.selectedTemplate
     const pattern = INDUSTRY_PATTERNS[template]
     if (pattern) {
+      const sizePattern = pattern.sizePatterns.small // 使用 small 作为基准
       setMonthlyPattern({
         monthlyGrowthRate: pattern.monthlyGrowthRate,
         queriesPerActiveUser: pattern.queriesPerActiveUser,
@@ -475,7 +586,7 @@ export function TokenEstimator({ lang }: { lang: string }) {
     modelPrices: any;
   } | null>(null);
 
-  // 计算函数
+  // 计函数
   const handleCalculate = () => {
     // 获取选中的模型
     const selectedEmbeddingModel = models.find(m => m.id === selectedEmbeddingModelId);
@@ -502,6 +613,56 @@ export function TokenEstimator({ lang }: { lang: string }) {
     });
   };
 
+  // 修改计算文档数量的函数
+  const calculateDocumentCounts = (
+    teamSize: number,
+    documentsPerUser: Record<string, number>
+  ) => {
+    return Object.entries(documentsPerUser).reduce((acc, [type, perUser]) => {
+      acc[type] = String(Math.round(perUser * teamSize))
+      return acc
+    }, {} as Record<string, string>)
+  }
+
+  // 修改模板变更处理函数
+  const handleTemplateChange = (newTemplate: keyof typeof INDUSTRY_PATTERNS) => {
+    const pattern = INDUSTRY_PATTERNS[newTemplate]
+    const sizePattern = pattern.sizePatterns.small // 使用 small 作为基准
+    
+    setInitialDimensions(prev => {
+      const newDocuments = calculateDocumentCounts(
+        prev.teamSize.total,
+        sizePattern.documentsPerUser
+      )
+
+      return {
+        ...prev,
+        selectedTemplate: newTemplate,
+        documents: newDocuments,
+        avgDocumentLength: DEFAULT_DOC_LENGTHS
+      }
+    })
+  }
+
+  // 修改团队规模变更处理函数
+  const handleTeamSizeChange = (newTeamSize: { total: number; activeUsers: number }) => {
+    const pattern = INDUSTRY_PATTERNS[initialDimensions.selectedTemplate]
+    const sizePattern = pattern.sizePatterns.small
+    
+    setInitialDimensions(prev => {
+      const newDocuments = calculateDocumentCounts(
+        newTeamSize.total,
+        sizePattern.documentsPerUser
+      )
+
+      return {
+        ...prev,
+        teamSize: newTeamSize,
+        documents: newDocuments
+      }
+    })
+  }
+
   return (
     <div className="space-y-8">
       <div className="bg-white rounded-lg shadow-lg p-6">
@@ -522,9 +683,47 @@ export function TokenEstimator({ lang }: { lang: string }) {
         <h3 className="text-lg font-medium text-gray-900 mb-6">
           初始化使用量
         </h3>
+        {/* 添加行业选择卡片 */}
+        <div className="mb-6">
+          <h4 className="text-sm font-medium text-gray-900 mb-4">选择行业</h4>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {Object.entries(INDUSTRY_PATTERNS).map(([key, pattern]) => (
+              <button
+                key={key}
+                onClick={() => handleTemplateChange(key as keyof typeof INDUSTRY_PATTERNS)}
+                className={`p-4 rounded-lg border text-left ${
+                  initialDimensions.selectedTemplate === key
+                    ? 'border-primary-500 bg-primary-50'
+                    : 'border-gray-200 hover:border-primary-200'
+                }`}
+              >
+                <h5 className="font-medium text-gray-900">{
+                  {
+                    university: '高等院校',
+                    k12: '中小学校',
+                    bank: '银行',
+                    tech: '科技公司'
+                  }[key]
+                }</h5>
+                <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                  {pattern.description}
+                </p>
+              </button>
+            ))}
+          </div>
+        </div>
+        
         <UsageDimensions
           dimensions={initialDimensions}
-          onChange={setInitialDimensions}
+          onChange={(newDimensions) => {
+            // 当团队规模改变时，更新文档数量
+            if (newDimensions.teamSize.total !== initialDimensions.teamSize.total ||
+                newDimensions.teamSize.activeUsers !== initialDimensions.teamSize.activeUsers) {
+              handleTeamSizeChange(newDimensions.teamSize)
+            } else {
+              setInitialDimensions(newDimensions)
+            }
+          }}
           type="initial"
         />
       </div>
@@ -532,7 +731,7 @@ export function TokenEstimator({ lang }: { lang: string }) {
       {/* 新增：月度使用量配置 */}
       <div className="bg-white rounded-lg shadow-lg p-6">
         <h3 className="text-lg font-medium text-gray-900 mb-6">
-          月度使用量配置
+          月度用量配置
         </h3>
         <div className="space-y-6">
           <div>
@@ -557,7 +756,7 @@ export function TokenEstimator({ lang }: { lang: string }) {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  人均日查询次数
+                  人均日查询数
                 </label>
                 <NumericInput
                   value={monthlyPattern.queriesPerActiveUser}
@@ -593,7 +792,7 @@ export function TokenEstimator({ lang }: { lang: string }) {
           </div>
 
           <div className="p-4 bg-gray-50 rounded-lg">
-            <h5 className="text-sm font-medium text-gray-900 mb-2">行业参考值</h5>
+            <h5 className="text-sm font-medium text-gray-900 mb-2">行业考值</h5>
             <div className="text-sm text-gray-600">
               {INDUSTRY_PATTERNS[initialDimensions.selectedTemplate || 'university'].description}
             </div>

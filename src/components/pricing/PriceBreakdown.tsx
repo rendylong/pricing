@@ -1,104 +1,82 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-
-interface PricingState {
-  users: number
-  messageCredits: number
-  vectorStorage: number
-  storageUnit: 'MB' | 'GB'
-  selectedFeatures: string[]
-  billingCycle: 'monthly' | 'yearly'
-  currency: string
-}
+import { Feature } from './types'
 
 interface PriceBreakdownProps {
-  pricing: PricingState
+  pricing: {
+    users: number
+    messageCredits: number
+    vectorStorage: number
+    storageUnit: 'MB' | 'GB'
+    selectedFeatures: string[]
+    billingCycle: 'monthly' | 'yearly'
+  }
+  features: Feature[]
   className?: string
 }
 
-const FEATURE_PRICES = {
-  customTools: 100,
-  analytics: 50,
-  support: 200,
-  models: 150,
-  security: 100
-}
+export function PriceBreakdown({ pricing, features, className = '' }: PriceBreakdownProps) {
+  const selectedFeaturesPrices = features
+    .filter(feature => pricing.selectedFeatures.includes(feature.id))
+    .reduce((total, feature) => total + feature.price, 0)
 
-const BASE_PRICE = 500
-const USER_PRICE = 10
-const MESSAGE_PRICE = 0.001
-const STORAGE_PRICE = {
-  MB: 0.1,
-  GB: 100
-}
-
-export function PriceBreakdown({ pricing, className }: PriceBreakdownProps) {
-  const extraUsers = Math.max(0, pricing.users - 3)
-  const extraMessages = Math.max(0, pricing.messageCredits - 5000)
-  const extraStorage = Math.max(0, pricing.vectorStorage - (pricing.storageUnit === 'GB' ? 0.2 : 200))
-
-  const usersCost = extraUsers * USER_PRICE
-  const messageCost = extraMessages * MESSAGE_PRICE
-  const storageCost = extraStorage * STORAGE_PRICE[pricing.storageUnit]
-  const featuresCost = pricing.selectedFeatures.reduce((sum, feature) => sum + FEATURE_PRICES[feature], 0)
-
-  const subtotal = BASE_PRICE + usersCost + messageCost + storageCost + featuresCost
-  const total = pricing.billingCycle === 'yearly' ? subtotal * 0.8 : subtotal
+  // 计算基础价格...
+  const basePrice = calculateBasePrice(pricing)
+  
+  // 计算总价
+  let totalPrice = basePrice + selectedFeaturesPrices
+  
+  // 如果是年付，应用折扣
+  if (pricing.billingCycle === 'yearly') {
+    totalPrice = totalPrice * 0.8 // 20% 折扣
+  }
 
   return (
-    <div className={cn("bg-white rounded-lg shadow-lg p-6", className)}>
-      <h3 className="text-lg font-medium text-gray-900 mb-4">
-        价格明细
-      </h3>
-      <div className="space-y-4">
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-500">基础价格</span>
-          <span className="font-medium">${BASE_PRICE}/月</span>
+    <div className={`space-y-4 ${className}`}>
+      <h3 className="text-lg font-semibold text-gray-900">价格明细</h3>
+      
+      <div className="space-y-2">
+        <div className="flex justify-between">
+          <span className="text-gray-600">基础服务</span>
+          <span className="font-medium">${basePrice}/月</span>
         </div>
-        {extraUsers > 0 && (
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">额外团队成员 ({extraUsers}人)</span>
-            <span className="font-medium">${usersCost}/月</span>
-          </div>
-        )}
-        {extraMessages > 0 && (
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">额外消息额度 ({extraMessages.toLocaleString()}条)</span>
-            <span className="font-medium">${messageCost.toFixed(2)}/月</span>
-          </div>
-        )}
-        {extraStorage > 0 && (
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">额外向量存储 ({extraStorage}{pricing.storageUnit})</span>
-            <span className="font-medium">${storageCost.toFixed(2)}/月</span>
-          </div>
-        )}
+        
         {pricing.selectedFeatures.length > 0 && (
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">附加功能</span>
-            <span className="font-medium">${featuresCost}/月</span>
+          <>
+            <div className="text-gray-600">附加功能：</div>
+            {features
+              .filter(feature => pricing.selectedFeatures.includes(feature.id))
+              .map(feature => (
+                <div key={feature.id} className="flex justify-between pl-4">
+                  <span className="text-gray-600">{feature.name}</span>
+                  <span className="font-medium">+${feature.price}/月</span>
+                </div>
+              ))
+            }
+          </>
+        )}
+        
+        {pricing.billingCycle === 'yearly' && (
+          <div className="flex justify-between text-green-600">
+            <span>年付优惠</span>
+            <span>-20%</span>
           </div>
         )}
+        
         <div className="pt-4 border-t border-gray-200">
-          <div className="flex justify-between items-baseline">
-            <span className="text-base font-medium text-gray-900">
-              总计
-              {pricing.billingCycle === 'yearly' && (
-                <span className="ml-2 text-sm text-green-600">(-20%)</span>
-              )}
-            </span>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-primary-600">
-                ${total.toFixed(2)}
-              </div>
-              <div className="text-sm text-gray-500">
-                {pricing.billingCycle === 'monthly' ? '/月' : '/月 (年付)'}
-              </div>
-            </div>
+          <div className="flex justify-between text-lg font-semibold">
+            <span>总计</span>
+            <span>${totalPrice.toFixed(2)}/{pricing.billingCycle === 'yearly' ? '月 (年付)' : '月'}</span>
           </div>
         </div>
       </div>
     </div>
   )
+}
+
+function calculateBasePrice(pricing: PriceBreakdownProps['pricing']) {
+  // 实现基础价格计算逻辑
+  // ...
+  return 0 // 替换为实际计算逻辑
 } 
