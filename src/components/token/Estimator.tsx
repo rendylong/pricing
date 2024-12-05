@@ -209,21 +209,50 @@ const INDUSTRY_PATTERNS: Record<string, IndustryPattern> = {
         queriesPerActiveUser: 4,
         turnsPerQuery: 4,
         teamSize: { total: 500, activeRatio: 0.6 },
-        // 高校特点：Word和PDF占比高，反映学术论文和教学资料特点
         documentsPerUser: {
-          word: 15,     // 论文和教案
-          pdf: 12,      // 学术论文
-          ppt: 8,       // 课件
-          excel: 4,     // 成绩单
-          text: 6,      // 普通文本
-          email: 15,    // 邮件
-          image: 5      // 教学图片
+          word: 15,
+          pdf: 12,
+          ppt: 8,
+          excel: 4,
+          text: 6,
+          email: 15,
+          image: 5
+        }
+      },
+      medium: {
+        monthlyGrowthRate: 0.10,
+        queriesPerActiveUser: 5,
+        turnsPerQuery: 5,
+        teamSize: { total: 2000, activeRatio: 0.6 },
+        documentsPerUser: {
+          word: 18,
+          pdf: 15,
+          ppt: 10,
+          excel: 5,
+          text: 8,
+          email: 20,
+          image: 6
+        }
+      },
+      large: {
+        monthlyGrowthRate: 0.12,
+        queriesPerActiveUser: 6,
+        turnsPerQuery: 6,
+        teamSize: { total: 5000, activeRatio: 0.6 },
+        documentsPerUser: {
+          word: 20,
+          pdf: 18,
+          ppt: 12,
+          excel: 6,
+          text: 10,
+          email: 25,
+          image: 8
         }
       }
     }
   },
   k12: {
-    description: '中小学校的知识库以教案、试题学生作业为主。Word和PPT占比较高，反映了教学资料特点。人均文档量适中。',
+    description: '中小学校的知识库以教案、试题和学生作业为主。Word和PPT占比较高，反映了教学资料特点。人均文档量适中。',
     monthlyGrowthRate: 0.05,
     queriesPerActiveUser: 3,
     turnsPerQuery: 4,
@@ -233,15 +262,44 @@ const INDUSTRY_PATTERNS: Record<string, IndustryPattern> = {
         queriesPerActiveUser: 2,
         turnsPerQuery: 3,
         teamSize: { total: 200, activeRatio: 0.8 },
-        // 中小学特点：Word和PPT占比高，反映教学资料特点
         documentsPerUser: {
-          word: 12,     // 教案和作业
-          ppt: 10,      // 课件
-          pdf: 5,       // 教材资料
-          excel: 3,     // 成绩单
-          text: 4,      // 普通文本
-          email: 8,     // 邮件
-          image: 6      // 教学图片
+          word: 12,
+          ppt: 10,
+          pdf: 5,
+          excel: 3,
+          text: 4,
+          email: 8,
+          image: 6
+        }
+      },
+      medium: {
+        monthlyGrowthRate: 0.05,
+        queriesPerActiveUser: 3,
+        turnsPerQuery: 4,
+        teamSize: { total: 500, activeRatio: 0.8 },
+        documentsPerUser: {
+          word: 15,
+          ppt: 12,
+          pdf: 6,
+          excel: 4,
+          text: 5,
+          email: 10,
+          image: 8
+        }
+      },
+      large: {
+        monthlyGrowthRate: 0.06,
+        queriesPerActiveUser: 4,
+        turnsPerQuery: 5,
+        teamSize: { total: 1000, activeRatio: 0.8 },
+        documentsPerUser: {
+          word: 18,
+          ppt: 15,
+          pdf: 8,
+          excel: 5,
+          text: 6,
+          email: 12,
+          image: 10
         }
       }
     }
@@ -742,7 +800,7 @@ export function TokenEstimator() {
     )
   }
 
-  // 监听模板和企业规模变化，更新使用模式
+  // 监听模板��企业规模变化，更新使用模式
   useEffect(() => {
     const template = initialDimensions.selectedTemplate
     const pattern = INDUSTRY_PATTERNS[template]
