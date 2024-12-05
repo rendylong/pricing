@@ -328,48 +328,6 @@ const BASE_PRICING = {
   minStorage: 200,        // 最少存储空间(MB)
 } as const;
 
-// 添加格计算函数
-const calculateBasicPrice = (
-  users: number,
-  messages: number,
-  storage: number,
-  storageUnit: 'MB' | 'GB'
-): {
-  userCost: number;
-  messageCost: number;
-  storageCost: number;
-  total: number;
-} => {
-  // 确保不低于最小值
-  const actualUsers = Math.max(users, BASE_PRICING.minUsers);
-  const actualMessages = Math.max(messages, BASE_PRICING.minMessages);
-  
-  // 转换存储单位到MB
-  const storageInMB = storageUnit === 'GB' ? storage * 1024 : storage;
-  const actualStorage = Math.max(storageInMB, BASE_PRICING.minStorage);
-
-  // 计算用户费用
-  const userCost = actualUsers * BASE_PRICING.userPrice;
-
-  // 计算消息费用
-  const messageUnits = Math.ceil(actualMessages / BASE_PRICING.messageUnit);
-  const messageCost = messageUnits * BASE_PRICING.messagePrice;
-
-  // 计算存储费用
-  const storageUnits = Math.ceil(actualStorage / BASE_PRICING.storageUnit);
-  const storageCost = storageUnits * BASE_PRICING.storagePrice;
-
-  // 计算总费用
-  const total = userCost + messageCost + storageCost;
-
-  return {
-    userCost,
-    messageCost,
-    storageCost,
-    total
-  };
-};
-
 // 定义计算结果的类型
 interface CalculationResult {
   initialUsage: {
@@ -401,26 +359,6 @@ interface CalculationResult {
     embedding: number;
     chatInput: number;
     chatOutput: number;
-  };
-}
-
-// 定义计算成本的函数类型
-interface CostCalculationInput {
-  embedding: number;
-  chatInput?: number;
-  chatOutput?: number;
-}
-
-interface CostCalculationResult {
-  initial: { 
-    embedding: number; 
-    total: number;
-  };
-  monthly: {
-    embedding: number;
-    chatInput: number;
-    chatOutput: number;
-    total: number;
   };
 }
 
@@ -563,7 +501,7 @@ export function TokenEstimator() {
     }
   }
 
-  // 添加模板变更处理函数
+  // 添加模板变更处理���数
   const handleTemplateChange = (newTemplate: keyof typeof INDUSTRY_PATTERNS) => {
     const pattern = INDUSTRY_PATTERNS[newTemplate];
     const sizePattern = pattern.sizePatterns.small;
@@ -697,7 +635,7 @@ export function TokenEstimator() {
       text: '纯文本倍率',
       excel: 'Excel 倍率',
       ppt: 'PPT 倍率',
-      pdf: 'PDF 倍率',
+      pdf: 'PDF ��率',
       word: 'Word 倍率',
       email: '件倍率',
       image: '图倍率',
@@ -787,21 +725,7 @@ export function TokenEstimator() {
   }
 
   // 添加月度使用量计算函数
-  const calculateMonthlyUsage = (dimensions: {
-    documents: Record<string, string | number>;
-    avgDocumentLength: Record<string, string | number>;
-    dailyQueries?: string | number;
-    conversationTurns?: string | number;
-  }): {
-    embedding: number;
-    chatInput: number;
-    chatOutput: number;
-    pattern: {
-      monthlyGrowthRate: number;
-      queriesPerActiveUser: number;
-      turnsPerQuery: number;
-    };
-  } => {
+  const calculateMonthlyUsage = () => {
     const selectedTemplate = initialDimensions.selectedTemplate
     const pattern = INDUSTRY_PATTERNS[selectedTemplate]
 
@@ -1036,7 +960,7 @@ export function TokenEstimator() {
         <h5 className="text-sm font-medium text-gray-900 mb-2">成本构成说明</h5>
         <div className="space-y-2 text-sm text-gray-600">
           <p>• 向量化成本：每月新增文档的向量化费用（月增长率 × 初始文档量）</p>
-          <p>• 对话输入成本：活跃用户 × 日查询次数 × 30天 × ��次查询token数</p>
+          <p>• 对话输入成本：活跃用户 × 日查询次数 × 30天 × 次查询token数</p>
           <p>• 对话输出成本：对话输入token × 输出比例（默认0.7）</p>
         </div>
       </div>
