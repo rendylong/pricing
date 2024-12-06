@@ -223,9 +223,7 @@ export function PricingCalculator() {
               pricing: { ...prev.pricing, userPrice: value }
             }))}
             min={0}
-            step={1}
             className="w-32 h-9 px-3"
-            noSpinButtons
           />
           <span className="text-sm text-gray-500">/用户/月</span>
         </div>
@@ -250,9 +248,7 @@ export function PricingCalculator() {
               pricing: { ...prev.pricing, messagePrice: value }
             }))}
             min={0}
-            step={0.5}
             className="w-32 h-9 px-3"
-            noSpinButtons
           />
           <span className="text-sm text-gray-500">/1000</span>
         </div>
@@ -277,9 +273,7 @@ export function PricingCalculator() {
               pricing: { ...prev.pricing, storagePrice: value }
             }))}
             min={0}
-            step={0.5}
             className="w-32 h-9 px-3"
-            noSpinButtons
           />
           <span className="text-sm text-gray-500">/100MB</span>
         </div>
@@ -304,9 +298,7 @@ export function PricingCalculator() {
               pricing: { ...prev.pricing, fileStoragePrice: value }
             }))}
             min={0}
-            step={0.5}
             className="w-32 h-9 px-3"
-            noSpinButtons
           />
           <span className="text-sm text-gray-500">/GB</span>
         </div>
@@ -376,9 +368,7 @@ export function PricingCalculator() {
                         onChange={(value) => handleDiscountChange(Number(value) / 100)}
                         min={0}
                         max={100}
-                        step={1}
                         className="w-20 h-9 px-3"
-                        noSpinButtons
                       />
                       <span className="text-sm text-gray-500">%</span>
                     </div>
@@ -418,7 +408,6 @@ export function PricingCalculator() {
                   onChange={(value) => setState({ ...state, users: value })}
                   onClear={() => setState({ ...state, users: 3 })}
                   className="w-full h-9 px-3"
-                  noSpinButtons
                 />
               </div>
 
@@ -435,12 +424,10 @@ export function PricingCalculator() {
                 </div>
                 <NumberInput
                   min={5000}
-                  step={1000}
                   value={state.messageCredits}
                   onChange={(value) => setState({ ...state, messageCredits: value })}
                   onClear={() => setState({ ...state, messageCredits: 5000 })}
                   className="w-full h-9 px-3"
-                  noSpinButtons
                 />
               </div>
 
@@ -463,7 +450,6 @@ export function PricingCalculator() {
                       onClear={() => setState({ ...state, vectorStorage: 200 })}
                       className="rounded-r-none h-9 px-3"
                       min={200}
-                      noSpinButtons
                     />
                   </div>
                   <Select
@@ -495,8 +481,6 @@ export function PricingCalculator() {
                     onClear={() => setState(prev => ({ ...prev, fileStorage: 10 }))}
                     className="w-full h-9 px-3"
                     min={10}
-                    step={5}
-                    noSpinButtons
                   />
                   <span className="text-sm text-gray-500 w-12">GB</span>
                 </div>
