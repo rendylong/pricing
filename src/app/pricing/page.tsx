@@ -15,7 +15,7 @@ export default function Page() {
                 价格计算器
               </h1>
               <p className="text-lg text-gray-600">
-                根据您的需求计算价格
+                根据客户的需求计算价格
               </p>
             </div>
           </div>

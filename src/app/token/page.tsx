@@ -16,7 +16,7 @@ export default function TokenPage() {
                 Token 使用量预估
               </h1>
               <p className="text-lg text-gray-600">
-                估算您的 Token 使用量和成本
+                根据用户规模估算向量化成本、月度使用成本
               </p>
             </div>
           </div>

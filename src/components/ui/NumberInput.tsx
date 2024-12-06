@@ -2,20 +2,21 @@
 
 import { ChangeEvent, InputHTMLAttributes, useState } from 'react'
 import { XCircleIcon } from '@heroicons/react/24/outline'
+import { cn } from '@/lib/utils'
 
 interface NumberInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
   value: number
   onChange: (value: number) => void
   onClear?: () => void
-  min?: number
+  noSpinButtons?: boolean
 }
 
 export function NumberInput({ 
   value, 
   onChange, 
   onClear,
-  min,
   className = '', 
+  noSpinButtons,
   ...props 
 }: NumberInputProps) {
   const [isEmpty, setIsEmpty] = useState(false)
@@ -24,7 +25,7 @@ export function NumberInput({
     const val = e.target.value
     if (val === '') {
       setIsEmpty(true)
-      onChange(min || 0)
+      onChange(0)
       return
     }
     setIsEmpty(false)
@@ -47,12 +48,11 @@ export function NumberInput({
         type="number"
         value={isEmpty ? '' : value}
         onChange={handleChange}
-        className={`block w-full rounded-md border-gray-300 shadow-sm 
-          focus:border-primary-500 focus:ring-primary-500 
-          [appearance:textfield] 
-          [&::-webkit-outer-spin-button]:appearance-none 
-          [&::-webkit-inner-spin-button]:appearance-none
-          ${className}`}
+        className={cn(
+          'w-full rounded-md border border-gray-300 focus:border-primary-500 focus:ring-primary-500 sm:text-sm',
+          noSpinButtons && '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none',
+          className
+        )}
         {...props}
       />
       {!isEmpty && value > 0 && onClear && (

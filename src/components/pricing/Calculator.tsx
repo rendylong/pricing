@@ -12,15 +12,17 @@ interface PricingState {
   messageCredits: number
   vectorStorage: number
   storageUnit: 'MB' | 'GB'
+  fileStorage: number
   selectedFeatures: string[]
   billingCycle: 'monthly' | 'yearly'
   currency: string
   yearlyDiscountRate: number
   yearlyDiscountEnabled: boolean
   pricing: {
-    userPrice: number        // 每用户价格
-    messagePrice: number     // 每1000条消息价格
-    storagePrice: number     // 每100MB价格
+    userPrice: number
+    messagePrice: number
+    storagePrice: number
+    fileStoragePrice: number
   }
 }
 
@@ -45,7 +47,7 @@ const DEFAULT_FEATURES: Feature[] = [
   },
   {
     id: 'custom-embedding',
-    name: '自定义向型',
+    name: '自定义向量模型',
     description: '使用自定义的向量模型进文档嵌入',
     price: 499,
     category: 'rag',
@@ -131,17 +133,17 @@ const DEFAULT_FEATURES: Feature[] = [
   {
     id: 'training',
     name: '培训服务',
-    description: '定制化的培训和咨询服务',
-    price: 9999,
+    description: '定制化的培训和咨询服务3 次',
+    price: 999,
     category: 'support',
     isCustomPrice: true,
     billingType: 'onetime'
   },
   {
     id: 'custom-development',
-    name: '定制开发服务',
-    description: '定制化的功能开发服务',
-    price: 19999,
+    name: '定制化 Agent开发服务',
+    description: '提供 1 个企业专属 Agent定制化的功能开发服务',
+    price: 9999,
     category: 'support',
     isCustomPrice: true,
     billingType: 'onetime'
@@ -161,15 +163,17 @@ export function PricingCalculator() {
     messageCredits: 5000,
     vectorStorage: 200,
     storageUnit: 'MB',
+    fileStorage: 10,
     selectedFeatures: [],
     billingCycle: 'monthly',
     currency: 'USD',
     yearlyDiscountRate: DISCOUNT_CONFIG.yearly.rate,
     yearlyDiscountEnabled: DISCOUNT_CONFIG.yearly.isEnabled,
     pricing: {
-      userPrice: 20,          // 默认每用户 $20
-      messagePrice: 10,       // 默认每1000条消息 $10
-      storagePrice: 15,       // 默认每100MB $15
+      userPrice: 20,
+      messagePrice: 10,
+      storagePrice: 15,
+      fileStoragePrice: 2,
     }
   })
   const [features, setFeatures] = useState(DEFAULT_FEATURES)
@@ -221,6 +225,7 @@ export function PricingCalculator() {
             min={0}
             step={1}
             className="w-32 h-9 px-3"
+            noSpinButtons
           />
           <span className="text-sm text-gray-500">/用户/月</span>
         </div>
@@ -247,8 +252,9 @@ export function PricingCalculator() {
             min={0}
             step={0.5}
             className="w-32 h-9 px-3"
+            noSpinButtons
           />
-          <span className="text-sm text-gray-500">/1000条</span>
+          <span className="text-sm text-gray-500">/1000</span>
         </div>
       </div>
 
@@ -273,8 +279,36 @@ export function PricingCalculator() {
             min={0}
             step={0.5}
             className="w-32 h-9 px-3"
+            noSpinButtons
           />
           <span className="text-sm text-gray-500">/100MB</span>
+        </div>
+      </div>
+
+      {/* 文件存储价格 */}
+      <div>
+        <div className="flex justify-between items-center mb-2">
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-900">
+              文件存储价格
+            </label>
+            <p className="text-xs text-gray-500">每GB存储空间的价格</p>
+          </div>
+        </div>
+        <div className="flex items-center space-x-2">
+          <span className="text-sm text-gray-500">$</span>
+          <NumberInput
+            value={state.pricing.fileStoragePrice}
+            onChange={(value) => setState(prev => ({
+              ...prev,
+              pricing: { ...prev.pricing, fileStoragePrice: value }
+            }))}
+            min={0}
+            step={0.5}
+            className="w-32 h-9 px-3"
+            noSpinButtons
+          />
+          <span className="text-sm text-gray-500">/GB</span>
         </div>
       </div>
     </div>
@@ -344,6 +378,7 @@ export function PricingCalculator() {
                         max={100}
                         step={1}
                         className="w-20 h-9 px-3"
+                        noSpinButtons
                       />
                       <span className="text-sm text-gray-500">%</span>
                     </div>
@@ -383,6 +418,7 @@ export function PricingCalculator() {
                   onChange={(value) => setState({ ...state, users: value })}
                   onClear={() => setState({ ...state, users: 3 })}
                   className="w-full h-9 px-3"
+                  noSpinButtons
                 />
               </div>
 
@@ -395,7 +431,7 @@ export function PricingCalculator() {
                     </label>
                     <p className="text-xs text-gray-500">每月可发送的消息数量</p>
                   </div>
-                  <span className="text-xs text-gray-500">最少5,000条消息</span>
+                  <span className="text-xs text-gray-500">最少5,000消息</span>
                 </div>
                 <NumberInput
                   min={5000}
@@ -404,6 +440,7 @@ export function PricingCalculator() {
                   onChange={(value) => setState({ ...state, messageCredits: value })}
                   onClear={() => setState({ ...state, messageCredits: 5000 })}
                   className="w-full h-9 px-3"
+                  noSpinButtons
                 />
               </div>
 
@@ -426,6 +463,7 @@ export function PricingCalculator() {
                       onClear={() => setState({ ...state, vectorStorage: 200 })}
                       className="rounded-r-none h-9 px-3"
                       min={200}
+                      noSpinButtons
                     />
                   </div>
                   <Select
@@ -436,6 +474,31 @@ export function PricingCalculator() {
                     <option value="MB">MB</option>
                     <option value="GB">GB</option>
                   </Select>
+                </div>
+              </div>
+
+              {/* 文件存储 */}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-900">
+                      文件存储
+                    </label>
+                    <p className="text-xs text-gray-500">上传文件的存储空间</p>
+                  </div>
+                  <span className="text-xs text-gray-500">最少10GB存储空间</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <NumberInput
+                    value={state.fileStorage}
+                    onChange={(value) => setState({ ...state, fileStorage: value })}
+                    onClear={() => setState(prev => ({ ...prev, fileStorage: 10 }))}
+                    className="w-full h-9 px-3"
+                    min={10}
+                    step={5}
+                    noSpinButtons
+                  />
+                  <span className="text-sm text-gray-500 w-12">GB</span>
                 </div>
               </div>
             </div>
