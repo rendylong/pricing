@@ -53,7 +53,7 @@ export default function HomePage() {
         </Link>
       </div>
       <p className="mt-8 text-gray-600 text-center max-w-md">
-        选择合适的计算器来估算您的 AI 使用成本
+        GBase Enterprise AI 成本计算器
       </p>
     </div>
   )
